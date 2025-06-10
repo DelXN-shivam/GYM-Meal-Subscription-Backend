@@ -26,21 +26,20 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Initialize database connection
+// Initialize database connection and start server
 const startServer = async () => {
   try {
     await connectDB();
-    if (process.env.NODE_ENV !== 'production') {
-      app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
-      });
-    }
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
   }
 };
 
+// Start the server
 startServer();
 
 export default app;
