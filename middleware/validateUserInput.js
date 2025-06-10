@@ -1,4 +1,4 @@
-import { userSchema } from "../schema/user.schema"
+import { userSchema } from "../schema/user.schema.js"
 
 export const validate = async (req, res, next) => {
     try {
