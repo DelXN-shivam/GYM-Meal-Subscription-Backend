@@ -2,20 +2,13 @@
 import express from "express";
 import bcrypt from 'bcrypt';
 import { User } from "../models/user.model.js";
+import { validateSignIn } from "../middleware/validateUserSignIn.js";
 
 export const authRouter = express.Router();
 
-authRouter.post("/login", async (req, res) => {
+authRouter.post("/login", validateSignIn , async (req, res) => {
     try {
         const { email, password } = req.body;
-
-        // Validate input
-        if (!email || !password) {
-            return res.status(400).json({
-                status: 'error',
-                message: 'Email and password are required'
-            });
-        }
 
         const existingUser = await User.findOne({ email });
 
