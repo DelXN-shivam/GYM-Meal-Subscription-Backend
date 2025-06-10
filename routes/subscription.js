@@ -3,15 +3,23 @@ import { sampleSub, subscription } from '../models/subscription.model.js';
 
 export const subscriptionRouter = express.Router()
 
-subscriptionRouter.post('/add' , async (req , res) => {
-     try {
-    const {userId ,  sampleSubId, startDate } = req.body;
+subscriptionRouter.post('/add', async (req, res) => {
+  try {
+    const { userId, sampleSubId, startDate } = req.body;
 
     if (!userId || !sampleSubId || !startDate) {
-      return res.status(400).json({ message: "sampleSubId and startDate are required." });
+      return res.status(400).json({ message: "userId, sampleSubId and startDate are required." });
     }
 
-    
+    // Check if user already has an active subscription
+    const existingUserSubscription = await subscription.findOne({ userId });
+    if (existingUserSubscription) {
+      return res.status(400).json({ 
+        message: "User already has an active subscription.",
+        existingSubscription: existingUserSubscription
+      });
+    }
+
     const existingSample = await sampleSub.findById(sampleSubId);
     if (!existingSample) {
       return res.status(404).json({ message: "Sample subscription not found." });
@@ -33,7 +41,7 @@ subscriptionRouter.post('/add' , async (req , res) => {
     console.error("Error adding subscription:", error);
     return res.status(500).json({ message: "Internal server error." });
   }
-})
+});
 
 
 subscriptionRouter.get("/:userId", async (req, res) => {
