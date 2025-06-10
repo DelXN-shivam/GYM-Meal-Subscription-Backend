@@ -22,13 +22,21 @@ const connectDB = async () => {
 
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false,
+      bufferCommands: true,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
     };
 
-    cached.promise = await mongoose.connect(MONGO_URL, opts).then((mongoose) => {
-      console.log("✅✅✅✅ Mongo Connected ✅✅✅✅");
-      return mongoose;
-    });
+    cached.promise = mongoose.connect(MONGO_URL, opts)
+      .then((mongoose) => {
+        console.log("✅✅✅✅ Mongo Connected ✅✅✅✅");
+        return mongoose;
+      })
+      .catch((error) => {
+        console.error("MongoDB connection error:", error);
+        cached.promise = null;
+        throw error;
+      });
   }
 
   try {
