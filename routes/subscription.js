@@ -5,10 +5,10 @@ export const subscriptionRouter = express.Router()
 
 subscriptionRouter.post('/add' , async (req , res) => {
      try {
-    const {userId ,  sampleSubId, startdate } = req.body;
+    const {userId ,  sampleSubId, startDate } = req.body;
 
-    if (!userId || !sampleSubId || !startdate) {
-      return res.status(400).json({ message: "sampleSubId and startdate are required." });
+    if (!userId || !sampleSubId || !startDate) {
+      return res.status(400).json({ message: "sampleSubId and startDate are required." });
     }
 
     
@@ -18,9 +18,9 @@ subscriptionRouter.post('/add' , async (req , res) => {
     }
 
     const newSubscription = new subscription({
-        userId,
+      userId,
       sampleSubId,
-      startdate: new Date(startdate),
+      startDate: new Date(startDate),
     });
 
     const savedSubscription = await newSubscription.save();

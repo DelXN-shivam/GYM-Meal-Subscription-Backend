@@ -1,12 +1,12 @@
 // routes/auth.js
 import express from "express";
-import jwt from "jsonwebtoken";
+import bcrypt from 'bcrypt'
 import { User } from "../models/user.model.js";
 
-const authRouter = express.Router();
+export const authRouter = express.Router();
 
 authRouter.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  /*const { email, password } = req.body;
 
   const user = await User.findOne({ email });
   if (!user || !(await user.comparePassword(password))) {
@@ -25,5 +25,35 @@ authRouter.post("/login", async (req, res) => {
     user: { id: user._id, name: user.name, email: user.email }
   });
 });
+*/
+   try {
+    const {email , password} = req.body;
+
+    const existingUser = await User.findOne({email})
+
+    if(!existingUser){
+        return res.status(401).json({
+            message : "User does not exist"
+        })
+    }
+
+    const matchPassword = await bcrypt.compare(password , existingUser.password)
+    if(!matchPassword){
+        return res.status(401).json({
+            message : "Password does not match"
+        })
+    }
+
+    return res.status(201).json({
+        message : "User exists , login successfull" , 
+        UserId : existingUser._id
+    })
+   }
+
+   catch (error) {
+    console.error("Error while login" , error)
+   }
+
+})
 
 export default authRouter;

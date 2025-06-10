@@ -42,7 +42,8 @@ userRouter.post('/register' , async (req , res) => {
     await newUser.save()
 
     res.status(200).json({
-        message : "User registered successfully"
+        message : "User registered successfully" , 
+        UserId : newUser._id
     })
     }
 
@@ -53,34 +54,6 @@ userRouter.post('/register' , async (req , res) => {
         })
     }
 })
-
-userRouter.post("/login" , async (req , res) => {
-
-  const {email , password} = req.body
-
-  const existingUser = await User.findOne({
-    email
-  })
-
-  if(!existingUser){
-    return res.status(500).json({
-      message : "User does not exist , please register"
-    })
-  }
-
-  const isPasswordValid = await bcrypt.compare(password, existingUser.password);
-
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Incorrect password" });
-    }
-
-  return res.status(200).json({
-    message : "user found",
-    email : existingUser.email
-  })
-
-})
-
 
 userRouter.post("/calculate-calories", (req, res) => {
   const { gender, weight, height, age, activityLevel, goal } = req.body;

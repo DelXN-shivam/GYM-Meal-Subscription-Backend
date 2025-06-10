@@ -11,7 +11,7 @@ const subscriptionSchema = new mongoose.Schema({
         ref: "SampleSub", 
         required: true,
   } ,
-    startdate : {
+    startDate : {
         type : Date ,
         required : true
     }
@@ -19,14 +19,14 @@ const subscriptionSchema = new mongoose.Schema({
 
 
 const sampleSubscription = new mongoose.Schema({
-    planduration : {
+    planDuration : {
         type : String,
         enum : ["weekly" , "monthly"],
         required : true,
         trim : true , 
         lowercase : true
     } , 
-    mealsperday : {
+    mealsPerDay : {
         type : Number,
         enum : [ 1 , 2 , 3 ],
         required : true
@@ -35,19 +35,19 @@ const sampleSubscription = new mongoose.Schema({
         type : Number,
         required : true
     } ,
-    mealtypes : {
+    mealTypes : {
         type : [String],
         enum : ["breakfast" , "lunch" , "dinner"],
         required : true,
         lowercase : true,
         trim : true
     } , 
-    numberofdays : {
+    numberOfDays : {
         type : Number,
         enum : [ 5 , 7 ],
         required : true
     } , 
-    dietarypreference : {
+    dietaryPreference : {
         type : [String],
         enum : ["veg" , "non-veg" , "vegan"],
         lowercase : true,

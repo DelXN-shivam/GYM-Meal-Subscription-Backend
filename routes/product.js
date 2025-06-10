@@ -10,15 +10,15 @@ productRouter.post("/add", async (req, res) => {
       name,
       ingredients,
       calories,
-      dietarypreference,
+      dietaryPreference,
       allergies
     } = req.body;
 
-    if (!type || !name || !ingredients || !calories || !dietarypreference) {
+    if (!type || !name || !ingredients || !calories || !dietaryPreference) {
       return res.status(400).json({ message: "Missing required fields." });
     }
 
-    const existingMeal = await Product.findOne({ type, name, dietarypreference });
+    const existingMeal = await Product.findOne({ type, name, dietaryPreference });
     if (existingMeal) {
       return res.status(409).json({ message: "Meal already exists." });
     }
@@ -28,7 +28,7 @@ productRouter.post("/add", async (req, res) => {
       name,
       ingredients,
       calories,
-      dietarypreference,
+      dietaryPreference,
       allergies: allergies || [] 
     });
 
@@ -69,7 +69,7 @@ productRouter.get("/suggest", async (req, res) => {
 
       const query = {
         type,
-        dietarypreference: dietaryPreference.toLowerCase(), 
+        dietaryPreference: dietaryPreference.toLowerCase(), 
         calories: { $gte: minCalories, $lte: maxCalories },
         allergies: { $nin: allergyList },
       };

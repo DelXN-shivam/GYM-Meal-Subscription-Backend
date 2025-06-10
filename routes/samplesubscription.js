@@ -1,24 +1,24 @@
 import express from 'express'
 import { sampleSub } from '../models/subscription.model.js'
 
-export const samplesubscriptionRouter = express.Router()
-samplesubscriptionRouter.post("/add" , async (req , res ) => {
+export const sampleSubscriptionRouter = express.Router()
+sampleSubscriptionRouter.post("/add" , async (req , res ) => {
 
     try {
-        const {planduration , mealsperday , price ,
-        mealtypes , numberofdays , dietarypreference , 
+        const {planDuration , mealsPerDay , price ,
+        mealTypes , numberOfDays , dietaryPreference , 
     } = req.body
 
-    if (!planduration ||! mealsperday || !price ||
-        !mealtypes || !numberofdays || !dietarypreference ) {
+    if (!planDuration ||! mealsPerDay || !price ||
+        !mealTypes || !numberOfDays || !dietaryPreference ) {
         return res.status(409).json({
             message : "enter valid inputs "
         })
     }
 
     const existingSub = await sampleSub.findOne({
-        price , planduration , mealsperday , mealtypes ,
-        numberofdays , dietarypreference
+        price , planDuration , mealsPerDay , mealTypes ,
+        numberOfDays , dietaryPreference
     })
     if(existingSub){
         return res.status(409).json({
@@ -26,8 +26,8 @@ samplesubscriptionRouter.post("/add" , async (req , res ) => {
         })
     }
     const newSub = new sampleSub({
-        planduration , mealsperday , price ,
-        mealtypes , numberofdays , dietarypreference
+        planDuration , mealsPerDay , price ,
+        mealTypes , numberOfDays , dietaryPreference
     })
 
     const finalSub = await newSub.save()
@@ -46,7 +46,7 @@ samplesubscriptionRouter.post("/add" , async (req , res ) => {
 
 
 
-samplesubscriptionRouter.get("/:id", async (req, res) => {
+sampleSubscriptionRouter.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
