@@ -1,20 +1,32 @@
 import mongoose from 'mongoose';
 
 const productSchema = new mongoose.Schema({
-  type: {
-    type: String,
-    enum: ["breakfast", "lunch", "dinner"],
-    required: true,
-    
-  },
   name: {
     type: String,
     required: true,
-  }, 
-  ingredients: [String],
+    trim: true
+  },
+  type: {
+    type: [String],
+    enum: ["breakfast", "lunch", "dinner"],
+    required: false
+  },
+  subcategory: {
+    type: String,
+    required: false,
+    trim: true
+  },
+  quantity: {
+    type: mongoose.Schema.Types.Mixed, 
+    required: false
+  },
   calories: {
     type: Number,
-    required: true,
+    required: true
+  },
+  price: {
+    type: Number,
+    required: false
   },
   dietaryPreference: {
     type: String,
@@ -23,9 +35,9 @@ const productSchema = new mongoose.Schema({
   },
   allergies: {
     type: [String], 
-    enum : ["nuts" , "gluten" , "dairy" , "eggs" , "other"],
+    enum: ["nuts", "gluten", "dairy", "eggs", "other"],
     default: [],
   },
-} , {timestamps : true});
+}, { timestamps: true });
 
 export const Product = mongoose.model("Product", productSchema);

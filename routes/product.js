@@ -6,40 +6,49 @@ export const productRouter = express.Router();
 productRouter.post("/add", async (req, res) => {
   try {
     const {
-      type,
       name,
-      ingredients,
+      type,
+      subcategory,
+      quantity,
       calories,
+      price,
       dietaryPreference,
       allergies
     } = req.body;
 
-    if (!type || !name || !ingredients || !calories || !dietaryPreference) {
-      return res.status(400).json({ message: "Missing required fields." });
+    if (!name  || !calories || !dietaryPreference) {
+      return res.status(400).json({ message: "Missing required fields: name, quantity, calories, price, dietaryPreference." });
     }
 
-    const existingMeal = await Product.findOne({ type, name, dietaryPreference });
-    if (existingMeal) {
-      return res.status(409).json({ message: "Meal already exists." });
+    const existingProduct = await Product.findOne({ 
+      name, 
+      subcategory: subcategory || null, 
+      dietaryPreference 
+    });
+    
+    if (existingProduct) {
+      return res.status(409).json({ message: "Product with this name and subcategory already exists." });
     }
 
     const newProduct = new Product({
-      type,
       name,
-      ingredients,
+      type: type || undefined,
+      subcategory: subcategory || undefined,
+      quantity,
       calories,
+      price,
       dietaryPreference,
-      allergies: allergies || [] 
+      allergies: allergies || []
     });
 
-    const savedMeal = await newProduct.save();
+    const savedProduct = await newProduct.save();
 
     res.status(201).json({
-      message: "Meal added successfully.",
-      meal: savedMeal
+      message: "Product added successfully.",
+      product: savedProduct
     });
   } catch (error) {
-    console.error("Error adding meal:", error);
+    console.error("Error adding product:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 });
