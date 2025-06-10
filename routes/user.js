@@ -1,9 +1,12 @@
 import express from 'express'
 import bcrypt from 'bcrypt'
 import {User} from '../models/user.model.js'
+import {z} from 'zod'
+import { validate } from '../middleware/validateUserInput.js'
 export const userRouter = express.Router()
 
-userRouter.post('/register' , async (req , res) => {
+userRouter.post('/register' , validate , async (req , res) => {
+  
     try {
         const {name,email, password, height, weight, gender, contactNo,
       homeAddress, officeAddress, collegeAddress, activityLevel,
