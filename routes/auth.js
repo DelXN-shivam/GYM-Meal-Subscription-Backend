@@ -1,59 +1,67 @@
 // routes/auth.js
 import express from "express";
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { User } from "../models/user.model.js";
 
 export const authRouter = express.Router();
 
 authRouter.post("/login", async (req, res) => {
-  /*const { email, password } = req.body;
+    try {
+        const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
-  if (!user || !(await user.comparePassword(password))) {
-    return res.status(401).json({ message: "Invalid credentials" });
-  }
+        // Validate input
+        if (!email || !password) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Email and password are required'
+            });
+        }
 
-  const token = jwt.sign(
-    { userId: user._id, email: user.email },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
-  );
+        const existingUser = await User.findOne({ email });
 
-  res.status(200).json({
-    message: "Login successful",
-    token,
-    user: { id: user._id, name: user.name, email: user.email }
-  });
+        if (!existingUser) {
+            return res.status(401).json({
+                status: 'error',
+                message: 'Invalid credentials'
+            });
+        }
+
+        const matchPassword = await bcrypt.compare(password, existingUser.password);
+        
+        if (!matchPassword) {
+            return res.status(401).json({
+                status: 'error',
+                message: 'Invalid credentials'
+            });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: existingUser._id, email: existingUser.email },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+        );
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Login successful',
+            data: {
+                token,
+                user: {
+                    id: existingUser._id,
+                    name: existingUser.name,
+                    email: existingUser.email
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Error during login:", error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Internal server error'
+        });
+    }
 });
-*/
-   try {
-    const {email , password} = req.body;
-
-    const existingUser = await User.findOne({email})
-
-    if(!existingUser){
-        return res.status(401).json({
-            message : "User does not exist"
-        })
-    }
-
-    const matchPassword = await bcrypt.compare(password , existingUser.password)
-    if(!matchPassword){
-        return res.status(401).json({
-            message : "Password does not match"
-        })
-    }
-
-    return res.status(201).json({
-        message : "User exists , login successfull" , 
-        UserId : existingUser._id
-    })
-   }
-
-   catch (error) {
-    console.error("Error while login" , error)
-   }
-
-})
 
 export default authRouter;
