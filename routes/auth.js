@@ -1,7 +1,6 @@
 // routes/auth.js
 import express from "express";
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { User } from "../models/user.model.js";
 
 export const authRouter = express.Router();
@@ -36,18 +35,10 @@ authRouter.post("/login", async (req, res) => {
             });
         }
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { userId: existingUser._id, email: existingUser.email },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
-        );
-
         return res.status(200).json({
             status: 'success',
             message: 'Login successful',
             data: {
-                token,
                 user: {
                     id: existingUser._id,
                     name: existingUser.name,
