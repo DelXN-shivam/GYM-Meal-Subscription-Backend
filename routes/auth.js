@@ -4,6 +4,11 @@ import bcrypt from 'bcrypt';
 import { User } from "../models/user.model.js";
 import { validateSignIn } from "../middleware/validateUserSignIn.js";
 
+/*
+    user login 
+    1. api/v1/auth/login
+    uses validateSignIn middleware
+*/
 export const authRouter = express.Router();
 
 authRouter.post("/login", validateSignIn , async (req, res) => {

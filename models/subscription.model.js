@@ -1,21 +1,37 @@
 import mongoose from "mongoose"
 
+//schema for sampleSubscription and the actual subscription selected by the user
 const subscriptionSchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User", 
-        required: true
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
   },
-    sampleSubId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "SampleSub", 
-        required: true,
-  } ,
-    startDate : {
-        type : Date ,
-        required : true
-    }
-} , {timestamps : true})
+  sampleSubId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "SampleSub",
+    required: true
+  },
+  startDate: {
+    type: Date,
+    required: true
+  },
+  endDate: {
+    type: Date,
+    required: true
+  },
+  planDuration: {
+    type: String,
+    enum : ["weekly" , "monthly"],
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ["active", "expired", "cancelled"],
+    default: "active"
+  }
+}, { timestamps: true });
+
 
 
 const sampleSubscription = new mongoose.Schema({
@@ -26,6 +42,11 @@ const sampleSubscription = new mongoose.Schema({
         trim : true , 
         lowercase : true
     } , 
+    numberOfDays : {
+        type : Number,
+        enum : [ 5 , 7 ],
+        required : true
+    } , 
     mealsPerDay : {
         type : Number,
         enum : [ 1 , 2 , 3 ],
@@ -33,7 +54,8 @@ const sampleSubscription = new mongoose.Schema({
     } , 
     price : {
         type : Number,
-        required : true
+        required : false,
+        default : 2000
     } ,
     mealTypes : {
         type : [String],

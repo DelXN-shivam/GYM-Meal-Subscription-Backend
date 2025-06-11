@@ -1,12 +1,21 @@
 import express from 'express'
 import bcrypt from 'bcrypt'
 import {User} from '../models/user.model.js'
-import {z} from 'zod'
 import { validate } from '../middleware/validateUserInput.js'
 export const userRouter = express.Router()
 
+
+/*
+  user.js file , user registration and
+  calculation of required calories for the user along with macros
+
+  1. /api/v1/user/register  ----> user registration
+
+  2. /api/v1/user/calculate-calories  ---->  calculate calories of the user
+*/
 userRouter.post('/register' , validate , async (req , res) => {
-  
+   
+    //required inputs given below
     try {
         const {name,email, password, height, weight, gender, contactNo,
       homeAddress, officeAddress, collegeAddress, activityLevel,
@@ -15,6 +24,7 @@ userRouter.post('/register' , validate , async (req , res) => {
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password ,salt)
     
+    //find existing user
     const existingUser = await User.findOne({
       email : email , 
       password : password
@@ -25,6 +35,8 @@ userRouter.post('/register' , validate , async (req , res) => {
         message : "User already exists"
       })
     }
+
+    //else create new User 
     const newUser = new User({
       name,
       email,
@@ -59,6 +71,8 @@ userRouter.post('/register' , validate , async (req , res) => {
 })
 
 userRouter.post("/calculate-calories", (req, res) => {
+  
+  //required inputs given below
   const { gender, weight, height, age, activityLevel, goal } = req.body;
 
   try {
@@ -66,6 +80,7 @@ userRouter.post("/calculate-calories", (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    //calculate BMR 
     const bmr = calculateBMR(gender, weight, height, age);
     const activityMultiplier = getActivityMultiplier(activityLevel);
     const tdee = bmr * activityMultiplier;
@@ -95,6 +110,7 @@ function calculateBMI(weight, heightCm) {
 
   return bmi.toFixed(2); 
 }
+
 // BMR calculation
 function calculateBMR(gender, weight, height, age) {
   return gender === "male"
@@ -155,5 +171,3 @@ function calculateMacros(calories, goal) {
     }
   };
 }
-
-

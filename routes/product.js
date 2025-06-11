@@ -1,6 +1,16 @@
 import express from 'express';
 import { Product } from '../models/product.model.js';
 
+/*
+  handles requests for /api/v1/product
+
+  1. product/add ---->  add a product , eg: eggs , boiled chicken , panner etc
+
+  2. product/suggest ----> suggest products based on the following 
+                            i) type : breakfast , lunch , dinner
+                           ii) dietaryPreference : veg , non-veg , vegan
+                          iii) allergies : dairy , eggs , vegan ,
+*/
 export const productRouter = express.Router();
 
 productRouter.post("/add", async (req, res) => {

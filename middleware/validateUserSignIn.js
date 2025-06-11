@@ -2,6 +2,10 @@
 import { signInSchema } from "../schema/user.logIn.schema.js";
 import { ZodError } from "zod";
 
+/*
+  validates user input at /auth/login
+*/
+
 export const validateSignIn = (req, res, next) => {
   try {
     const validatedData = signInSchema.parse(req.body);

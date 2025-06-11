@@ -1,5 +1,8 @@
 import { userSchema } from "../schema/user.schema.js"
-
+/*
+    user input validation using zod library
+    used for validating the user input at the time of register
+*/
 export const validate = async (req, res, next) => {
     try {
         const validationResult = userSchema.safeParse(req.body);

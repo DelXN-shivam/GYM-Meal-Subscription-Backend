@@ -2,6 +2,14 @@ import express from 'express'
 import { sampleSub } from '../models/subscription.model.js'
 
 export const sampleSubscriptionRouter = express.Router()
+
+/*
+    handles requests to /api/v1/sampleSubscription
+
+    1. sampleSubscription/add ---> add a sample Subscription
+    2. samplesSubscription/get:id ---> get a sample Subscription by pasing in the id
+*/
+
 sampleSubscriptionRouter.post("/add" , async (req , res ) => {
 
     try {
@@ -9,7 +17,7 @@ sampleSubscriptionRouter.post("/add" , async (req , res ) => {
         mealTypes , numberOfDays , dietaryPreference , 
     } = req.body
 
-    if (!planDuration ||! mealsPerDay || !price ||
+    if (!planDuration ||! mealsPerDay  ||
         !mealTypes || !numberOfDays || !dietaryPreference ) {
         return res.status(409).json({
             message : "enter valid inputs "
@@ -17,7 +25,7 @@ sampleSubscriptionRouter.post("/add" , async (req , res ) => {
     }
 
     const existingSub = await sampleSub.findOne({
-        price , planDuration , mealsPerDay , mealTypes ,
+          planDuration , mealsPerDay , mealTypes ,
         numberOfDays , dietaryPreference
     })
     if(existingSub){

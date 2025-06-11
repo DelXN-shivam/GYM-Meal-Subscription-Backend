@@ -1,14 +1,17 @@
 import express from 'express'
 import {rootRouter} from './routes/index.js';
 import connectDB from './utils/db.js'
+import { expireOldSubscriptions } from './middleware/expireSubscription.js';
 
+
+//Main index.js file (root file)
 const app = express()
 const PORT = process.env.PORT || 3000
 
 // Middleware
 app.use(express.json())
 
-// Health check endpoint
+
 app.get('/', (req, res) => {
   res.json({ status: 'success', message: 'Server is running successfully!' });
 });
@@ -39,6 +42,7 @@ const startServer = async () => {
   }
 };
 
+expireOldSubscriptions();
 // Start the server
 startServer();
 

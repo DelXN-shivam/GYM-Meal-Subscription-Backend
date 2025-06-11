@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 
+//user schema for register
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -65,7 +66,24 @@ const userSchema = new mongoose.Schema({
     type : String , 
     required : true,
     default : "active"
-  }
+  } ,
+  subscriptions: [{
+    subscriptionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Subscription'
+    },
+    sampleSubId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'SampleSubscription'
+    },
+    startDate: Date,
+    endDate : Date,
+    status: {
+      type: String,
+      enum: ['active', 'expired', 'paused'],
+      default: 'active'
+    }
+  }]
 }, { timestamps: true });
 
 export const User = mongoose.models.User || mongoose.model("User", userSchema);
