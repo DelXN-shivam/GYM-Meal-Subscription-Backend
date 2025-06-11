@@ -11,7 +11,7 @@ const productSchema = new mongoose.Schema({
     enum: ["breakfast", "lunch", "dinner"],
     required: false
   },
-  subcategory: {
+  subCategory: {
     type: String,
     required: false,
     trim: true

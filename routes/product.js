@@ -8,7 +8,7 @@ productRouter.post("/add", async (req, res) => {
     const {
       name,
       type,
-      subcategory,
+      subCategory,
       quantity,
       calories,
       price,
@@ -22,7 +22,7 @@ productRouter.post("/add", async (req, res) => {
 
     const existingProduct = await Product.findOne({ 
       name, 
-      subcategory: subcategory || null, 
+      subCategory: subCategory || null, 
       dietaryPreference 
     });
     
@@ -33,7 +33,7 @@ productRouter.post("/add", async (req, res) => {
     const newProduct = new Product({
       name,
       type: type || undefined,
-      subcategory: subcategory || undefined,
+      subCategory: subCategory || undefined,
       quantity,
       calories,
       price,
@@ -55,61 +55,69 @@ productRouter.post("/add", async (req, res) => {
 
 productRouter.get("/suggest", async (req, res) => {
   try {
-    const { dietaryPreference, calories, allergies } = req.query;
+    const { dietaryPreference, allergies } = req.query;
 
-    if (!dietaryPreference || !calories) {
-      return res.status(400).json({ message: "Missing required parameters." });
+    if (!dietaryPreference) {
+      return res.status(400).json({ message: "Dietary preference is required." });
     }
 
-    const dailyCalories = parseInt(calories);
+   
+    const dietPrefs = dietaryPreference
+      .split(",")
+      .map(d => d.trim().toLowerCase());
+
+    
+    const validPrefs = ["veg", "non-veg", "vegan"];
+    const invalidPrefs = dietPrefs.filter(d => !validPrefs.includes(d));
+    
+    if (invalidPrefs.length > 0) {
+      return res.status(400).json({ 
+        message: `Invalid dietary preference(s): ${invalidPrefs.join(", ")}` 
+      });
+    }
+
+    
     const allergyList = allergies
-      ? allergies.split(",").map((a) => a.trim().toLowerCase())
+      ? allergies.split(",").map(a => a.trim().toLowerCase())
       : [];
 
-    const mealTargets = {
-      breakfast: Math.round(dailyCalories * 0.3),
-      lunch: Math.round(dailyCalories * 0.4),
-      dinner: Math.round(dailyCalories * 0.3),
+    
+    const requestedTypes = req.query.type
+      ? req.query.type.split(",").map(t => t.trim().toLowerCase())
+      : ["breakfast", "lunch", "dinner"];
+
+   
+    const query = {
+      type: { $in: requestedTypes },
+      dietaryPreference: { $in: dietPrefs },
     };
 
-    const getMeal = async (type, targetCalories) => {
-      const minCalories = Math.round(targetCalories * 0.85);
-      const maxCalories = Math.round(targetCalories * 1.15);
+    
+    if (allergyList.length > 0) {
+      query.allergies = { $nin: allergyList };
+    }
 
-      const query = {
-        type,
-        dietaryPreference: dietaryPreference.toLowerCase(), 
-        calories: { $gte: minCalories, $lte: maxCalories },
-        allergies: { $nin: allergyList },
-      };
+    
+    const suggestedProducts = await Product.find(query)
+      .select('name type calories dietaryPreference allergies')
+      .lean();
 
-      const meals = await Product.find(query);
-
-      if (meals.length === 0) return null;
-
-      const randomIndex = Math.floor(Math.random() * meals.length);
-      const selectedMeal = meals[randomIndex];
-
-      return {
-        type: selectedMeal.type,
-        name: selectedMeal.name,
-        calories: selectedMeal.calories,
-        ingredients: selectedMeal.ingredients,
-      };
-    };
-
-    const breakfast = await getMeal("breakfast", mealTargets.breakfast);
-    const lunch = await getMeal("lunch", mealTargets.lunch);
-    const dinner = await getMeal("dinner", mealTargets.dinner);
+    if (suggestedProducts.length === 0) {
+      return res.status(404).json({ 
+        message: "No products found matching your criteria." 
+      });
+    }
 
     res.status(200).json({
-      totalCalories: dailyCalories,
-      suggestedMeals: {
-        breakfast,
-        lunch,
-        dinner,
-      },
+      count: suggestedProducts.length,
+      products: suggestedProducts,
+      filtersApplied: {
+        dietaryPreference: dietPrefs,
+        excludedAllergies: allergyList,
+        mealTypes: requestedTypes
+      }
     });
+
   } catch (error) {
     console.error("Error suggesting meals:", error);
     res.status(500).json({ message: "Server error." });
