@@ -2,7 +2,7 @@
 
 ## Project File Structure : 
 
-nutrition-api/
+Gym-Meal/
 ├── index.js # Main entry point (DB connection, server startup)
 ├── routes/
 │ ├── index.js # Root router (routes distribution)
