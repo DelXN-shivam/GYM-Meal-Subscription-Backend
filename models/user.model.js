@@ -27,13 +27,13 @@ const userSchema = new mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ["Male", "Female", "Other"],
+    enum: ["male", "female", "Other"],
     required: true,
   },
   contactNo: {
     type: String,
     required: true,
-    match: /^[0-9]{10}$/, // Adjust regex as needed
+    match: /^[0-9]{10}$/,
   },
   homeAddress: {
     type: String,
@@ -50,11 +50,13 @@ const userSchema = new mongoose.Schema({
   fitnessGoal: {
     type: String,
     required: true,
+    enum : ["lose-weight" , "muscle-gain" , "maintain"],
     default : "muscle-gain"
   },
   dietPreference: {
     type: String,
     required: true,
+    enum : ["veg" , "non-veg" , "vegan"],
     default : "veg"
   },
   allergy: {
@@ -65,9 +67,48 @@ const userSchema = new mongoose.Schema({
   activityLevel : {
     type : String , 
     required : true,
+    enum : ["active" , "sedentary" , "moderate"],
     default : "active"
   } ,
-  subscriptions: [{
+  mealData : {
+    mealPerDay :{
+      type : Number 
+    } , 
+    mealTypes : {
+      type : [String],
+      enum : ["breakfast" , "lunch" , "dinner"]
+    } , 
+    numberOfDays : {
+      type : Number,
+      enum : [5 , 7]
+    } , 
+    dietaryPreference : {
+      type : [String],
+      enum : ["veg" , "non-veg" , "vegan"]
+    }
+  } ,
+  products: {
+  type: [
+    {
+      breakfast: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
+        validate: [arr => arr.length <= 3, 'Breakfast can have at most 3 products']
+      }],
+      lunch: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
+        validate: [arr => arr.length <= 3, 'Lunch can have at most 3 products']
+      }],
+      dinner: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
+        validate: [arr => arr.length <= 3, 'Dinner can have at most 3 products']
+      }]
+    }
+  ], 
+} , 
+ subscriptions: [{
     subscriptionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Subscription'
@@ -83,7 +124,8 @@ const userSchema = new mongoose.Schema({
       enum: ['active', 'expired', 'paused'],
       default: 'active'
     }
-  }]
+  }] 
+
 }, { timestamps: true });
 
 export const User = mongoose.models.User || mongoose.model("User", userSchema);

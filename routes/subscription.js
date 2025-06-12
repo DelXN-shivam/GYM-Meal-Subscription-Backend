@@ -64,7 +64,7 @@ subscriptionRouter.post('/add', async (req, res) => {
       await User.findByIdAndUpdate(
         userId,
         {
-          $push: {
+          $set: {
             subscriptions: {
               subscriptionId: savedSubscription._id,
               sampleSubId: sampleSubId,

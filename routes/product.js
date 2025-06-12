@@ -1,5 +1,6 @@
 import express from 'express';
 import { Product } from '../models/product.model.js';
+import { User } from '../models/user.model.js';
 
 /*
   handles requests for /api/v1/product
@@ -63,68 +64,118 @@ productRouter.post("/add", async (req, res) => {
   }
 });
 
-productRouter.get("/suggest", async (req, res) => {
-  try {
-    const { dietaryPreference, allergies } = req.query;
+// Utility to find the best combination of products for a given calorie target
+function generateMealCombos(products, targetCalories) {
+  let bestCombo = [];
+  let bestDiff = Infinity;
 
-    if (!dietaryPreference) {
-      return res.status(400).json({ message: "Dietary preference is required." });
+  const n = products.length;
+
+  // Limit brute-force combinations to small sets
+  for (let i = 0; i < 1 << n; i++) {
+    const combo = [];
+    let total = 0;
+
+    for (let j = 0; j < n; j++) {
+      if (i & (1 << j)) {
+        combo.push(products[j]);
+        total += products[j].calories;
+      }
     }
 
-   
+    const diff = Math.abs(targetCalories - total);
+    if (diff < bestDiff && combo.length > 0) {
+      bestDiff = diff;
+      bestCombo = combo;
+    }
+
+    // Stop early if exact match
+    if (bestDiff === 0) break;
+  }
+
+  return bestCombo;
+}
+
+// Route handler
+productRouter.get("/suggest", async (req, res) => {
+  try {
+    const { dietaryPreference, allergies, calories , userId } = req.query;
+
+    if (!dietaryPreference || !calories) {
+      return res.status(400).json({
+        message: "Both dietaryPreference and calories are required."
+      });
+    }
+
+    const totalCalories = parseInt(calories);
+    if (isNaN(totalCalories) || totalCalories <= 0) {
+      return res.status(400).json({ message: "Calories must be a positive number." });
+    }
+
+    const calorieDistribution = {
+      breakfast: totalCalories * 0.3,
+      lunch: totalCalories * 0.4,
+      dinner: totalCalories * 0.3
+    };
+
     const dietPrefs = dietaryPreference
       .split(",")
       .map(d => d.trim().toLowerCase());
 
-    
     const validPrefs = ["veg", "non-veg", "vegan"];
     const invalidPrefs = dietPrefs.filter(d => !validPrefs.includes(d));
-    
+
     if (invalidPrefs.length > 0) {
-      return res.status(400).json({ 
-        message: `Invalid dietary preference(s): ${invalidPrefs.join(", ")}` 
+      return res.status(400).json({
+        message: `Invalid dietary preference(s): ${invalidPrefs.join(", ")}`
       });
     }
 
-    
     const allergyList = allergies
       ? allergies.split(",").map(a => a.trim().toLowerCase())
       : [];
 
-    
-    const requestedTypes = req.query.type
-      ? req.query.type.split(",").map(t => t.trim().toLowerCase())
-      : ["breakfast", "lunch", "dinner"];
+    const requestedTypes = ["breakfast", "lunch", "dinner"];
 
-   
-    const query = {
-      type: { $in: requestedTypes },
-      dietaryPreference: { $in: dietPrefs },
-    };
+    const suggestions = {};
 
-    
-    if (allergyList.length > 0) {
-      query.allergies = { $nin: allergyList };
+    for (const type of requestedTypes) {
+      const targetCalories = calorieDistribution[type];
+
+      const query = {
+        type,
+        dietaryPreference: { $in: dietPrefs }
+      };
+
+      if (allergyList.length > 0) {
+        query.allergies = { $nin: allergyList };
+      }
+
+      const products = await Product.find(query)
+        .select("name type calories dietaryPreference allergies")
+        .lean();
+
+      if (!products || products.length === 0) {
+        suggestions[type] = [];
+        continue;
+      }
+
+      // Pick best combination of products to match target calories
+      const bestCombo = generateMealCombos(products, targetCalories);
+      suggestions[type] = bestCombo;
     }
 
-    
-    const suggestedProducts = await Product.find(query)
-      .select('name type calories dietaryPreference allergies')
-      .lean();
-
-    if (suggestedProducts.length === 0) {
-      return res.status(404).json({ 
-        message: "No products found matching your criteria." 
-      });
-    }
+    await addProductsToUser(userId, suggestions);
 
     res.status(200).json({
-      count: suggestedProducts.length,
-      products: suggestedProducts,
+      totalCalories,
+      calories : {
+        calorieDistribution
+      },
+      suggestions,
       filtersApplied: {
         dietaryPreference: dietPrefs,
-        excludedAllergies: allergyList,
-        mealTypes: requestedTypes
+        excludedAllergies: allergyList
       }
     });
 
@@ -133,3 +184,33 @@ productRouter.get("/suggest", async (req, res) => {
     res.status(500).json({ message: "Server error." });
   }
 });
+
+async function addProductsToUser(userId, combo) {
+  try {
+    const productSet = {
+      breakfast: combo.breakfast.map(item => item._id),
+      lunch: combo.lunch.map(item => item._id),
+      dinner: combo.dinner.map(item => item._id)
+    };
+
+    // Update user with the product references
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          products: {
+            breakfast: productSet.breakfast,
+            lunch: productSet.lunch,
+            dinner: productSet.dinner
+          }
+        }
+      },
+      { new: true } // Return the updated user
+    );
+
+    return updatedUser;
+  } catch (error) {
+    console.error("Error updating user with suggested products:", error);
+    throw error;
+  }
+}

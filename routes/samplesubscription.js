@@ -1,5 +1,6 @@
 import express from 'express'
 import { sampleSub } from '../models/subscription.model.js'
+import { User } from '../models/user.model.js'
 
 export const sampleSubscriptionRouter = express.Router()
 
@@ -14,7 +15,7 @@ sampleSubscriptionRouter.post("/add" , async (req , res ) => {
 
     try {
         const {planDuration , mealsPerDay , price ,
-        mealTypes , numberOfDays , dietaryPreference , 
+        mealTypes , numberOfDays , dietaryPreference , userId
     } = req.body
 
     if (!planDuration ||! mealsPerDay  ||
@@ -39,6 +40,8 @@ sampleSubscriptionRouter.post("/add" , async (req , res ) => {
     })
 
     const finalSub = await newSub.save()
+
+    await updateUser(userId , finalSub)
     return res.status(201).json({
         message : "Subscription added",
         subscription : finalSub
@@ -52,6 +55,29 @@ sampleSubscriptionRouter.post("/add" , async (req , res ) => {
     }
 } )
 
+
+async function updateUser(userId , finalSub){
+    try {
+    const updatedUser = await User.findByIdAndUpdate(
+        userId ,
+    {
+        $push : {
+            mealData : {
+                mealTypes : finalSub.mealTypes,
+                mealsPerDay : finalSub.mealsPerDay,
+                numberOfDays : finalSub.numberOfDays,
+                dietaryPreference : finalSub.dietaryPreference
+            }
+        }
+
+    } , { new : true} )
+
+    return updateUser 
+} catch (error) {
+    console.error("Error updating user with suggested products:", error);
+    throw error;
+  }
+}   
 
 
 sampleSubscriptionRouter.get("/:id", async (req, res) => {
