@@ -26,8 +26,7 @@ userRouter.post('/register' , validate , async (req , res) => {
     
     //find existing user
     const existingUser = await User.findOne({
-      email : email , 
-      password : password
+      email : email
     })
 
     if(existingUser) {
@@ -65,8 +64,10 @@ userRouter.post('/register' , validate , async (req , res) => {
     catch(err){
         console.log(err)
         res.status(500).json({
-            message : "User registration failed"
+            message : "User registration failed",
+            error : err.message
         })
+        
     }
 })
 
