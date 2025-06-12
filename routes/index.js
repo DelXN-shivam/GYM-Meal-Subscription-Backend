@@ -4,6 +4,7 @@ import { productRouter } from './product.js'
 import { sampleSubscriptionRouter } from './samplesubscription.js'
 import { subscriptionRouter } from './subscription.js'
 import { authRouter } from './auth.js'
+import { addressRouter } from './address.js'
 
 //routes/index.js , handles all the requests coming to /api/v1
 export const rootRouter = express.Router()
@@ -13,3 +14,4 @@ rootRouter.use("/product" , productRouter)
 rootRouter.use("/sampleSubscription" , sampleSubscriptionRouter)
 rootRouter.use("/subscription" , subscriptionRouter)
 rootRouter.use("/auth" , authRouter)
+rootRouter.use("/address" , addressRouter)

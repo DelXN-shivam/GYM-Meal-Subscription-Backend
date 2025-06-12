@@ -1,7 +1,7 @@
 import express from 'express'
 import { sampleSub } from '../models/subscription.model.js'
 import { User } from '../models/user.model.js'
-import { number } from 'zod'
+
 
 export const sampleSubscriptionRouter = express.Router()
 
@@ -16,7 +16,7 @@ sampleSubscriptionRouter.post("/add" , async (req , res ) => {
 
     try {
         const {planDuration , mealsPerDay , price ,
-        mealTypes , numberOfDays , dietaryPreference , userId
+        mealTypes , numberOfDays , dietaryPreference 
     } = req.body
 
     if (!planDuration ||! mealsPerDay  ||
@@ -42,7 +42,7 @@ sampleSubscriptionRouter.post("/add" , async (req , res ) => {
 
     const finalSub = await newSub.save()
 
-    await updateUser(userId , finalSub)
+    
     return res.status(201).json({
         message : "Subscription added",
         subscription : finalSub
@@ -55,31 +55,7 @@ sampleSubscriptionRouter.post("/add" , async (req , res ) => {
         })
     }
 } )
-
-
-async function updateUser(userId , finalSub){
-    try {
-    const updatedUser = await User.findByIdAndUpdate(
-        userId ,
-    {
-        $set : {
-            mealData : {
-                mealTypes : finalSub.mealTypes,
-                mealsPerDay : finalSub.mealsPerDay,
-                numberOfDays : finalSub.numberOfDays,
-                dietaryPreference : finalSub.dietaryPreference
-            }
-        }
-
-    } , { new : true} )
-
-    return updateUser 
-} catch (error) {
-    console.error("Error updating user with suggested products:", error);
-    throw error;
-  }
-}   
-
+ 
 
 sampleSubscriptionRouter.get("/get", async (req, res) => {
   try {
@@ -88,9 +64,9 @@ sampleSubscriptionRouter.get("/get", async (req, res) => {
       mealsPerDay,
       mealTypes,
       numberOfDays,
-      dietaryPreference
+      dietaryPreference,
+      userId
     } = req.query;
-
     // Validate required fields
     if (
       !planDuration ||
@@ -112,7 +88,7 @@ sampleSubscriptionRouter.get("/get", async (req, res) => {
       ? dietaryPreference
       : dietaryPreference.split(",");
 
-    // Build query
+    // Build query for database search
     const query = {
         planDuration: planDuration.trim().toLowerCase(),
         mealsPerDay: Number(mealsPerDay),
@@ -129,9 +105,25 @@ sampleSubscriptionRouter.get("/get", async (req, res) => {
       });
     }
 
+    // Create user preferences object with actual arrays, not query operators
+    const userPreferences = {
+      planDuration: planDuration.trim().toLowerCase(),
+      mealsPerDay: Number(mealsPerDay),
+      numberOfDays: Number(numberOfDays),
+      mealTypes: mealTypesArray,  // Store actual array
+      dietaryPreference: dietaryPreferenceArray  // Store actual array
+    };
+    console.log("About to update user:", userId);
+    console.log("User preferences:", userPreferences);
+
+    // Only update user if userId is provided
+    if (userId) {
+      await updateUser(userId, userPreferences);
+    }
+
     res.status(200).json({
       message: "Matching subscriptions found",
-      subscriptions: results
+      subscriptions: results 
     });
   } catch (error) {
     console.error("Error in GET /sampleSubscription/get:", error);
@@ -140,3 +132,39 @@ sampleSubscriptionRouter.get("/get", async (req, res) => {
     });
   }
 });
+
+async function updateUser(userId, userPreferences) {
+  console.log("updateUser called with:", userId, userPreferences);
+  try {
+    console.log("About to execute findByIdAndUpdate...");
+    
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          mealData: {
+            planDuration: userPreferences.planDuration,
+            mealTypes: userPreferences.mealTypes,
+            mealsPerDay: userPreferences.mealsPerDay,
+            numberOfDays: userPreferences.numberOfDays,
+            dietaryPreference: userPreferences.dietaryPreference
+          }
+        }
+      },
+      { new: true }
+    );
+
+    console.log("MongoDB operation completed. Result:", updatedUser);
+
+    if (!updatedUser) {
+      console.log("No user found with ID:", userId);
+      throw new Error("User not found");
+    }
+
+    console.log("User updated successfully:", updatedUser._id);
+    return updatedUser;
+  } catch (error) {
+    console.error("Error updating user with preferences:", error);
+    throw error;
+  }
+}
