@@ -61,7 +61,7 @@ async function updateUser(userId , finalSub){
     const updatedUser = await User.findByIdAndUpdate(
         userId ,
     {
-        $push : {
+        $set : {
             mealData : {
                 mealTypes : finalSub.mealTypes,
                 mealsPerDay : finalSub.mealsPerDay,
