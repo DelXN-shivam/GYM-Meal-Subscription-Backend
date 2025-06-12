@@ -13,7 +13,7 @@ export const validate = async (req, res, next) => {
                 errors: validationResult.error.errors 
             });
         }
-
+        req.body =  validationResult.data
         await next();
     } catch (error) {
         console.error(error);

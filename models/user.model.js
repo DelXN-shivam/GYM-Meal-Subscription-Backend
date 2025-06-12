@@ -124,7 +124,26 @@ const userSchema = new mongoose.Schema({
       enum: ['active', 'expired', 'paused'],
       default: 'active'
     }
-  }] 
+  }] , 
+  addressDetails : {
+      defaultAddress : { 
+        type : String , 
+        required : false,
+        enum : ["home" , "office" , "college"] 
+      } , 
+      actualAddress : {
+        type : String ,
+        required : false
+      } , 
+      deliveryDate : {
+        type : Date,
+        required : false
+      } , 
+      customAddress : {
+        type : String , 
+        required : false
+      }
+  }
 
 }, { timestamps: true });
 

@@ -9,7 +9,7 @@ import { ZodError } from "zod";
 export const validateSignIn = (req, res, next) => {
   try {
     const validatedData = signInSchema.parse(req.body);
-    req.body = validatedData; 
+    req.body = validatedData.data; 
     next();
   } catch (error) {
     if (error instanceof ZodError) {
