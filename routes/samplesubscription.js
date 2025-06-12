@@ -1,6 +1,7 @@
 import express from 'express'
 import { sampleSub } from '../models/subscription.model.js'
 import { User } from '../models/user.model.js'
+import { number } from 'zod'
 
 export const sampleSubscriptionRouter = express.Router()
 
@@ -80,19 +81,62 @@ async function updateUser(userId , finalSub){
 }   
 
 
-sampleSubscriptionRouter.get("/:id", async (req, res) => {
+sampleSubscriptionRouter.get("/get", async (req, res) => {
   try {
-    const { id } = req.params;
+    const {
+      planDuration,
+      mealsPerDay,
+      mealTypes,
+      numberOfDays,
+      dietaryPreference
+    } = req.query;
 
-    const subscription = await sampleSub.findById(id);
-
-    if (!subscription) {
-      return res.status(404).json({ message: "Sample subscription not found." });
+    // Validate required fields
+    if (
+      !planDuration ||
+      !mealsPerDay ||
+      !mealTypes ||
+      !numberOfDays ||
+      !dietaryPreference
+    ) {
+      return res.status(400).json({
+        message: "Missing required query parameters"
+      });
     }
 
-    res.status(200).json(subscription);
+    // Normalize inputs
+    const mealTypesArray = Array.isArray(mealTypes)
+      ? mealTypes
+      : mealTypes.split(",");
+    const dietaryPreferenceArray = Array.isArray(dietaryPreference)
+      ? dietaryPreference
+      : dietaryPreference.split(",");
+
+    // Build query
+    const query = {
+        planDuration: planDuration.trim().toLowerCase(),
+        mealsPerDay: Number(mealsPerDay),
+        numberOfDays: Number(numberOfDays),
+        mealTypes: { $all: mealTypesArray },
+        dietaryPreference: { $all: dietaryPreferenceArray }
+    };
+
+    const results = await sampleSub.find(query);
+
+    if (!results.length) {
+      return res.status(404).json({
+        message: "No matching sample subscriptions found"
+      });
+    }
+
+    res.status(200).json({
+      message: "Matching subscriptions found",
+      subscriptions: results
+    });
   } catch (error) {
-    console.error("Error fetching sample subscription:", error);
-    res.status(500).json({ message: "Internal server error." });
+    console.error("Error in GET /sampleSubscription/get:", error);
+    res.status(500).json({
+      message: "Server error while fetching sample subscriptions"
+    });
   }
 });
