@@ -163,8 +163,8 @@ function calculateMacros(calories, goal) {
 
 userRouter.put("/update/:id" , async ( req, res ) => {
   try {
-    const id = req.params;
-
+    const id = req.params.id;
+    console.log("ID received:", id, typeof id);
   const userExists = await User.findById(id);
   if(!userExists){
     return res.json({
