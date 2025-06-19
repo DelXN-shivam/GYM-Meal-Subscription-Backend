@@ -2,6 +2,7 @@ import express from 'express'
 import bcrypt from 'bcrypt'
 import {User} from '../models/user.model.js'
 import { validate } from '../middleware/validateUserInput.js'
+import { verifyAdminToken } from '../middleware/adminAuth.js'
 export const userRouter = express.Router()
 
 
@@ -41,11 +42,15 @@ userRouter.post('/register' , validate , async (req , res) => {
       contactNo
     });
 
-    await newUser.save()
+   const finalUser =  await newUser.save()
 
     res.status(200).json({
         message : "User registered successfully" , 
-        UserId : newUser._id
+        User : finalUser,
+        name : name,
+        email : email,
+        password : password,
+        contactNo : contactNo,
     })
     }
 
@@ -189,4 +194,10 @@ userRouter.put("/update/:id" , async ( req, res ) => {
       message: 'Internal server error'
     });
   }
+})
+
+userRouter.get("/all" , verifyAdminToken ,  async ( req, res ) => {
+
+  const users = await User.find()
+  res.json(users);
 })

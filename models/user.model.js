@@ -50,25 +50,24 @@ const userSchema = new mongoose.Schema({
   fitnessGoal: {
     type: String,
     required: false,
-    enum : ["lose-weight" , "muscle-gain" , "maintain"],
-    default : "muscle-gain"
+    enum : ["lose-weight" , "muscle-gain" , "maintain"]
   },
   dietPreference: {
     type: String,
     required: false,
-    enum : ["veg" , "non-veg" , "vegan"],
-    default : "veg"
+    enum : ["veg" , "non-veg" , "vegan"]
+    
   },
   allergy: {
     type: String,
-    required: false,
-    default : "none"
+    required: false
+    
   },
   activityLevel : {
     type : String , 
     required : false,
-    enum : ["active" , "sedentary" , "moderate"],
-    default : "active"
+    enum : ["active" , "sedentary" , "moderate"]
+    
   } ,
   mealData : {
     mealPerDay :{
@@ -121,8 +120,8 @@ const userSchema = new mongoose.Schema({
     endDate : Date,
     status: {
       type: String,
-      enum: ['active', 'expired', 'paused'],
-      default: 'active'
+      enum: ['active', 'expired', 'paused']
+      
     }
   }] , 
   addressDetails : {
