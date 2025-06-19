@@ -17,9 +17,7 @@ userRouter.post('/register' , validate , async (req , res) => {
    
     //required inputs given below
     try {
-        const {name,email, password, height, weight, gender, contactNo,
-      homeAddress, officeAddress, collegeAddress, activityLevel,
-      fitnessGoal, dietPreference, allergy} = req.body
+        const {name,email, password, contactNo} = req.body
 
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password ,salt)
@@ -40,17 +38,7 @@ userRouter.post('/register' , validate , async (req , res) => {
       name,
       email,
       password: hashedPassword,
-      height,
-      weight,
-      gender,
-      contactNo,
-      homeAddress,
-      officeAddress,
-      collegeAddress,
-      fitnessGoal,
-      dietPreference,
-      activityLevel,
-      allergy
+      contactNo
     });
 
     await newUser.save()
@@ -172,3 +160,33 @@ function calculateMacros(calories, goal) {
     }
   };
 }
+
+userRouter.put("/update/:id" , async ( req, res ) => {
+  try {
+    const id = req.params;
+
+  const userExists = await User.findById(id);
+  if(!userExists){
+    return res.json({
+      message: "User does not exist"
+    })
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: 'User updated successfully',
+      user: updatedUser
+    });
+  }
+  catch(error){
+    console.error(error)
+    return res.status(500).json({
+      message: 'Internal server error'
+    });
+  }
+})

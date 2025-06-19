@@ -19,16 +19,16 @@ const userSchema = new mongoose.Schema({
   },
   height: {
     type: Number, // in cm 
-    required: true,
+    required: false,
   },
   weight: {
     type: Number, // in kg 
-    required: true,
+    required: false,
   },
   gender: {
     type: String,
     enum: ["male", "female", "Other"],
-    required: true,
+    required: false,
   },
   contactNo: {
     type: String,
@@ -49,13 +49,13 @@ const userSchema = new mongoose.Schema({
   },
   fitnessGoal: {
     type: String,
-    required: true,
+    required: false,
     enum : ["lose-weight" , "muscle-gain" , "maintain"],
     default : "muscle-gain"
   },
   dietPreference: {
     type: String,
-    required: true,
+    required: false,
     enum : ["veg" , "non-veg" , "vegan"],
     default : "veg"
   },
@@ -66,7 +66,7 @@ const userSchema = new mongoose.Schema({
   },
   activityLevel : {
     type : String , 
-    required : true,
+    required : false,
     enum : ["active" , "sedentary" , "moderate"],
     default : "active"
   } ,
