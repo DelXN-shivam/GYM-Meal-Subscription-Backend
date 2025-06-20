@@ -166,7 +166,8 @@ function calculateMacros(calories, goal) {
   };
 }
 
-userRouter.put("/update/:id" , async ( req, res ) => {
+// userRouter.put("/update/:id" , async ( req, res ) => {
+userRouter.patch("/update/:id" , async ( req, res ) => {
   try {
     const id = req.params.id;
     console.log("ID received:", id, typeof id);
@@ -196,7 +197,8 @@ userRouter.put("/update/:id" , async ( req, res ) => {
   }
 })
 
-userRouter.get("/all"  ,verifyAdminToken ,  async ( req, res ) => {
+// userRouter.get("/all" , verifyAdminToken,  async ( req, res ) => {
+userRouter.get("/all" , async ( req, res ) => {
   try {
     console.log("inside user/all")
     const users = await User.find()
