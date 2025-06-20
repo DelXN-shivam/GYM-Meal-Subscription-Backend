@@ -49,7 +49,7 @@ userRouter.post('/register' , validate , async (req , res) => {
         User : finalUser,
         name : name,
         email : email,
-        password : password,
+        originalPassword : password,
         contactNo : contactNo,
     })
     }
@@ -185,7 +185,7 @@ userRouter.put("/update/:id" , async ( req, res ) => {
 
     return res.status(200).json({
       message: 'User updated successfully',
-      user: updatedUser
+      user: updatedUser,
     });
   }
   catch(error){
@@ -196,8 +196,19 @@ userRouter.put("/update/:id" , async ( req, res ) => {
   }
 })
 
-userRouter.get("/all" , verifyAdminToken ,  async ( req, res ) => {
-
-  const users = await User.find()
-  res.json(users);
+userRouter.get("/all"  ,verifyAdminToken ,  async ( req, res ) => {
+  try {
+    console.log("inside user/all")
+    const users = await User.find()
+    return res.json({
+      message : "User data fetch successfull",
+      data : users
+    })
+  }
+  catch(error){
+    return res.status(500).json({
+      message : "Error while fetching Users",
+      error : error.message
+    })
+  }
 })

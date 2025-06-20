@@ -17,6 +17,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  originalPassword : {
+    type : String,
+    required : false
+  },
   height: {
     type: Number, // in cm 
     required: false,
@@ -53,7 +57,7 @@ const userSchema = new mongoose.Schema({
     enum : ["lose-weight" , "muscle-gain" , "maintain"]
   },
   dietPreference: {
-    type: String,
+    type: [String],
     required: false,
     enum : ["veg" , "non-veg" , "vegan"]
     
