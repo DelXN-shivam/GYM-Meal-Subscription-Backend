@@ -169,32 +169,40 @@ function calculateMacros(calories, goal) {
 userRouter.put("/update/:id" , async ( req, res ) => {
   try {
     const id = req.params.id;
-    console.log("ID received:", id, typeof id);
-  const userExists = await User.findById(id);
-  if(!userExists){
-    return res.json({
-      message: "User does not exist"
-    })
-  }
+    const userExists = await User.findById(id);
 
-  const updatedUser = await User.findByIdAndUpdate(
+    if (!userExists) {
+      return res.status(404).json({ message: "User does not exist" });
+    }
+
+    // Prepare update data
+    let updateData = { ...req.body };
+
+    // If image is uploaded, add filename to user profile
+    if (req.file) {
+      updateData.profileImage = req.file.filename; // or req.file.id if you prefer storing ID
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
       id,
-      { $set: req.body },
-      { new: true }
+      { $set: updateData },
+      { new: true, runValidators: true }
     );
 
     return res.status(200).json({
       message: 'User updated successfully',
-      user: updatedUser,
+      user: updatedUser
     });
+  } catch (err) {
+    console.error("Full Error:", err);
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map(e => e.message);
+      return res.status(400).json({ message: "Validation failed", errors });
+    }
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
   }
-  catch(error){
-    console.error(error)
-    return res.status(500).json({
-      message: 'Internal server error'
-    });
-  }
-})
+});
 
 userRouter.get("/all"  ,verifyAdminToken ,  async ( req, res ) => {
   try {
