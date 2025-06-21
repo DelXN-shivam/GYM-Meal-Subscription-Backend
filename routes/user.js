@@ -166,8 +166,8 @@ function calculateMacros(calories, goal) {
   };
 }
 
-// userRouter.put("/update/:id" , async ( req, res ) => {
-userRouter.patch("/update/:id" , async ( req, res ) => {
+userRouter.put("/update/:id" , async ( req, res ) => {
+// userRouter.patch("/update/:id" , async ( req, res ) => {
   try {
     const id = req.params.id;
     console.log("ID received:", id, typeof id);
