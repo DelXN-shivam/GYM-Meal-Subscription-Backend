@@ -42,7 +42,8 @@ authRouter.post("/login", validateSignIn , async (req, res) => {
                     name: existingUser.name,
                     email: existingUser.email
                 }
-            }
+            },
+            user: existingUser
         });
     } catch (error) {
         console.error("Error during login:", error);
