@@ -110,10 +110,10 @@ const userSchema = new mongoose.Schema(
             {
               type: mongoose.Schema.Types.ObjectId,
               ref: "Product",
-              validate: [
-                (arr) => arr.length <= 3,
-                "Lunch can have at most 3 products",
-              ],
+              // validate: [
+              //   (arr) => arr.length <= 3,
+              //   "Lunch can have at most 3 products",
+              // ],
             },
           ],
           dinner: [
