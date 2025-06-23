@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema(
       type: Number, // in kg
       required: false,
     },
+    age: {
+      type: Number, // in years
+      required: false,
+    },
     gender: {
       type: String,
       enum: ["male", "female", "Other"],
