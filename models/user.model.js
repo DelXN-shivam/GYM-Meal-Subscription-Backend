@@ -91,6 +91,10 @@ const userSchema = new mongoose.Schema(
         type: [String],
         enum: ["breakfast", "lunch", "dinner"],
       },
+      mealDuration: {
+        type: [String],
+        enum: ["weekly", "monthly"],
+      },
       numberOfDays: {
         type: Number,
         enum: [5, 7],
