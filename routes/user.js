@@ -154,15 +154,9 @@ function calculateMacros(calories, goal) {
   }
 
   return {
-    protein: {
-      percentage: proteinPct * 100
-    },
-    carbs: {
-      percentage: carbsPct * 100
-    },
-    fats: {
-      percentage: fatsPct * 100
-    }
+    protein:  proteinPct * 100,
+    carbs: carbsPct * 100,
+    fats: fatsPct * 100
   };
 }
 
