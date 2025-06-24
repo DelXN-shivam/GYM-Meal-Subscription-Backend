@@ -179,11 +179,6 @@ userRouter.put("/update/:id" , async ( req, res ) => {
     // Prepare update data
     let updateData = { ...req.body };
 
-    // If image is uploaded, add filename to user profile
-    if (req.file) {
-      updateData.profileImage = req.file.filename; // or req.file.id if you prefer storing ID
-    }
-
     const updatedUser = await User.findByIdAndUpdate(
       id,
       { $set: updateData },

@@ -34,7 +34,6 @@ addressRouter.post("/add/:userId", validateAddress, async (req, res) => {
 
     console.log("User found, current addressDetails:", userExists.addressDetails);
 
-    // Method 1: Using $set (your current approach)
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {

@@ -267,3 +267,29 @@ productRouter.delete("/delete/:id" , async (req , res) => {
     })
   }
 })
+
+productRouter.get("/get/:id" , async ( req , res ) => {
+  try {
+    const productId = req.params.id;
+
+    const existingProduct = await Product.findById(productId);
+
+    if(!existingProduct){
+      return res.status(401).json({
+        message : "Product does not exist"
+      })
+    }
+
+    return res.status(200).json({
+      message : "Product found",
+      product : existingProduct
+    })
+
+  } catch(err){
+    console.error(err)
+    return res.status(500).json({
+      message : "Error fetching product",
+      error : err.message
+    })
+  }
+})

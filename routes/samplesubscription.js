@@ -67,7 +67,7 @@ sampleSubscriptionRouter.get("/get", async (req, res) => {
       dietaryPreference,
       userId
     } = req.query;
-    // Validate required fields
+    
     if (
       !planDuration ||
       !mealsPerDay ||
@@ -80,7 +80,7 @@ sampleSubscriptionRouter.get("/get", async (req, res) => {
       });
     }
 
-    // Normalize inputs
+   
     const mealTypesArray = Array.isArray(mealTypes)
       ? mealTypes
       : mealTypes.split(",");
@@ -88,7 +88,7 @@ sampleSubscriptionRouter.get("/get", async (req, res) => {
       ? dietaryPreference
       : dietaryPreference.split(",");
 
-    // Build query for database search
+    
     const query = {
         planDuration: planDuration.trim().toLowerCase(),
         mealsPerDay: Number(mealsPerDay),

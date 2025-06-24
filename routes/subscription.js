@@ -111,3 +111,28 @@ function calculateEndDate(startDate, planDuration) {
   endDate.setDate(endDate.getDate() + days);
   return endDate;
 }
+
+subscriptionRouter.get("/get/:id" , async (req , res) => {
+  try {
+    const subscriptionId = req.params.id;
+
+  const existingSubscription = await subscription.findById(subscriptionId)
+
+  if(!existingSubscription){
+    return res.status(401).json({
+      message : "Subscription does not exist "
+    })
+  }
+
+  return res.status(200).json({
+    message : "Subscription found",
+    subscription : existingSubscription
+  })
+  } catch (err){
+    console.log(err);
+    return res.status(500).json({
+      message : "Error while fetching subscription",
+      error : err.message
+    })
+  }
+})
