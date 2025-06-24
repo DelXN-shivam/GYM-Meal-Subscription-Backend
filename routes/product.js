@@ -214,3 +214,56 @@ async function addProductsToUser(userId, combo) {
     throw error;
   }
 }
+
+productRouter.get("/all" , async  ( req , res ) => {
+  try {
+    const products = await Product.find()
+    if(!products){
+    return res.status(411).json({
+      message : "no products found"
+    })
+  }
+    return res.status(200).json({
+      message : "Products found",
+      products : products
+    })
+}
+  catch(err){
+    console.error("Cannot get products" , err)
+    return res.status(500).json({
+      message  : 'Internal server error'
+    })
+  }
+})
+
+productRouter.delete("/delete/:id" , async (req , res) => {
+  try {
+    const id = req.params.id;
+
+    const existingProduct = await Product.findById(id);
+
+    if (!existingProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+
+    const deleteProduct = await Product.deleteOne({_id : id})
+    if(!deleteProduct){
+      return res.status(411).json({
+        message : "Product Deletion not successfull"
+      })
+    }
+    
+    return res.status(200).json({
+      message : "Product deleted successfully"
+    })
+
+  }
+  catch(err){ 
+    console.error(err)
+    return res.status(500).json({
+      message : "Server Error",
+      error : err.message
+    })
+  }
+})

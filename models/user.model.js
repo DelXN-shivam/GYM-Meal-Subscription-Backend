@@ -62,6 +62,9 @@ const userSchema = new mongoose.Schema(
       required: false,
       enum: ["veg", "non-veg", "vegan"],
     },
+    profileImageUrl : {
+      type : String
+    },
     // allergy: {
     //   type: String,
     //   required: false

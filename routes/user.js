@@ -206,19 +206,35 @@ userRouter.put("/update/:id" , async ( req, res ) => {
 });
 
 // userRouter.get("/all" , verifyAdminToken,  async ( req, res ) => {
-userRouter.get("/all" , async ( req, res ) => {
+userRouter.get("/all", async (req, res) => {
   try {
-    console.log("inside user/all")
-    const users = await User.find()
+    console.log("inside user/all");
+
+    // Get page and limit from query params, with defaults
+    const page = parseInt(req.query.page) || 1; // Current page
+    const limit = parseInt(req.query.limit) || 2; // Users per page
+
+    // Calculate how many users to skip
+    const skip = (page - 1) * limit;
+
+    // Fetch users with skip and limit
+    const users = await User.find().skip(skip).limit(limit);
+
+    // Get total number of users to calculate total pages
+    const totalUsers = await User.countDocuments();
+    const totalPages = Math.ceil(totalUsers / limit);
+
     return res.json({
-      message : "User data fetch successfull",
-      data : users
-    })
-  }
-  catch(error){
+      message: "User data fetched successfully",
+      data: users,
+      currentPage: page,
+      totalPages: totalPages,
+      totalUsers: totalUsers
+    });
+  } catch (error) {
     return res.status(500).json({
-      message : "Error while fetching Users",
-      error : error.message
-    })
+      message: "Error while fetching Users",
+      error: error.message
+    });
   }
-})
+});
