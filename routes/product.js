@@ -293,3 +293,21 @@ productRouter.get("/get/:id" , async ( req , res ) => {
     })
   }
 })
+
+productRouter.post('/getProducts', async (req, res) => {
+  try {
+    const { productIds } = req.body;
+
+    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
+      return res.status(400).json({ message: 'Product IDs are required' });
+    }
+
+    const products = await Product.find({ _id: { $in: productIds } });
+
+    return res.status(200).json({ products });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Error fetching products', error: err.message });
+  }
+});
+

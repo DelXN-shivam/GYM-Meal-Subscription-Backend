@@ -168,3 +168,44 @@ async function updateUser(userId, userPreferences) {
     throw error;
   }
 }
+
+sampleSubscriptionRouter.post('/getSampleSubscriptions', async (req, res) => {
+  try {
+    const { sampleSubId } = req.body;
+
+    if (!sampleSubId || !Array.isArray(sampleSubId) || sampleSubId.length === 0) {
+      return res.status(400).json({ message: 'SampleSubscription IDs are required' });
+    }
+
+    const sampleSubscriptions = await sampleSub.find({ _id: { $in: sampleSubId } });
+
+    return res.status(200).json({ sampleSubscriptions });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Error fetching sampleSubId', error: err.message });
+  }
+});
+
+
+sampleSubscriptionRouter.get("/get/:id" , async ( req , res ) => {
+  const sampleSubId = req.params.id;
+
+  if(!sampleSubId){
+    return res.status(401).json({
+      message : "SampleSub Id required"
+    })
+  }
+
+  const sampleSubscriptions = await sampleSub.findById(sampleSubId);
+  if(!sampleSubscriptions){
+    return res.status(401).json({
+      message : "Error while fetching individual SampleSubscription "
+    })
+  }
+
+  return res.status(200).json({
+    message : "SsampleSub found",
+    sampleSubscriptions
+  })
+
+})
