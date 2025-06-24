@@ -238,3 +238,29 @@ userRouter.get("/all", async (req, res) => {
     });
   }
 });
+
+userRouter.get("/get/:id" , async ( req , res ) => {
+  try {
+    const userId = req.params.id;
+    const existingUser = await User.findById(userId);
+
+    if(!existingUser){
+      return res.status(401).json({
+        message : "User does not exist"
+      })
+    }
+
+    return res.status(200).json({
+      message : 'User Found',
+      user : existingUser
+    })
+
+  }
+  catch (err){
+    console.error(err);
+    return res.status(500).json({
+      message : "Error fetching User",
+      error : err.message
+    })
+  }
+})
