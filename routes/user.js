@@ -2,7 +2,6 @@ import express from 'express'
 import bcrypt from 'bcrypt'
 import {User} from '../models/user.model.js'
 import { validate } from '../middleware/validateUserInput.js'
-import { verifyAdminToken } from '../middleware/adminAuth.js'
 export const userRouter = express.Router()
 
 
@@ -175,8 +174,8 @@ function calculateMacros(calories, goal) {
   };
 }
 
-// userRouter.put("/update/:id" , async ( req, res ) => {
-userRouter.patch("/update/:id", async (req, res) => {
+userRouter.put("/update/:id" , async ( req, res ) => {
+//userRouter.patch("/update/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const userExists = await User.findById(id);
