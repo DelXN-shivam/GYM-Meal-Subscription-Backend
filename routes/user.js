@@ -64,34 +64,49 @@ userRouter.post('/register' , validate , async (req , res) => {
     }
 })
 
-userRouter.post("/calculate-calories", (req, res) => {
-  
-  //required inputs given below
-  const { gender, weight, height, age, activityLevel, goal } = req.body;
+userRouter.post("/calculate-calories", async (req, res) => {
+  const { gender, weight, height, age, activityLevel, goal, userId } = req.body;
 
   try {
-    if (!gender || !weight || !height || !age || !activityLevel || !goal) {
-      return res.status(400).json({ message: "All fields are required" });
+    // Validate request body
+    if (!gender || !weight || !height || !age || !activityLevel || !goal || !userId) {
+      return res.status(400).json({ message: "All fields including userId are required" });
     }
 
-    //calculate BMR 
+    // Perform calculations
     const bmr = calculateBMR(gender, weight, height, age);
     const activityMultiplier = getActivityMultiplier(activityLevel);
     const tdee = bmr * activityMultiplier;
     const adjustedCalories = applyGoalAdjustment(tdee, goal.toLowerCase());
-    const BMI = calculateBMI(weight , height)
-    const macros = calculateMacros(adjustedCalories , goal.toLowerCase())
+    const bmi = calculateBMI(weight, height);
+    const macros = calculateMacros(adjustedCalories, goal.toLowerCase());
+
+    // Update the nested `nutrients` field
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        nutrients: {
+          bmr: Math.round(bmr),
+          tdee: Math.round(tdee),
+          recommendedCalories: Math.round(adjustedCalories),
+          bmi: bmi,
+          macroNutrients: macros,
+        },
+      },
+      { new: true }
+    );
+
     res.json({
-      bmr: Math.round(bmr),
-      tdee: Math.round(tdee),
-      recommendedCalories: Math.round(adjustedCalories),
-      bmi : BMI ,
-      macronutients : macros
+      message: "Nutritional data calculated and saved",
+      nutrients: updatedUser.nutrients,
     });
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
+
+
 
 //BMI calculation 
 function calculateBMI(weight, heightCm) {

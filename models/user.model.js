@@ -177,6 +177,17 @@ const userSchema = new mongoose.Schema(
         required: false,
       },
     },
+    nutrients : {
+      bmr : Number,
+      tdee : Number,
+      recommendedCalories : Number,
+      bmi : String , 
+      macroNutrients : {
+        protein : Number,
+        carbs : Number,
+        fats : Number
+      }
+    }
   },
   { timestamps: true }
 );
