@@ -27,7 +27,7 @@ productRouter.post("/add", async (req, res) => {
       allergies
     } = req.body;
 
-    if (!name  || !calories || !dietaryPreference) {
+    if (!name  || !calories || !dietaryPreference || !type || !calories || !allergies) {
       return res.status(400).json({ message: "Missing required fields: name, quantity, calories, price, dietaryPreference." });
     }
 

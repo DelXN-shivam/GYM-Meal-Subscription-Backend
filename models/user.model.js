@@ -181,7 +181,7 @@ const userSchema = new mongoose.Schema(
       bmr : Number,
       tdee : Number,
       recommendedCalories : Number,
-      bmi : String , 
+      bmi : Number , 
       macroNutrients : {
         protein : Number,
         carbs : Number,

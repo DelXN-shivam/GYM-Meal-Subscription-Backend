@@ -65,7 +65,7 @@ userRouter.post('/register' , validate , async (req , res) => {
 
 userRouter.post("/calculate-calories", async (req, res) => {
   const { gender, weight, height, age, activityLevel, goal, userId } = req.body;
-
+  console.log("inside calories")
   try {
     // Validate request body
     if (!gender || !weight || !height || !age || !activityLevel || !goal || !userId) {
@@ -116,7 +116,7 @@ function calculateBMI(weight, heightCm) {
   const heightInMeters = heightCm / 100;
   const bmi = weight / (heightInMeters ** 2);
 
-  return bmi.toFixed(2); 
+  return parseFloat(bmi.toFixed(2)); 
 }
 
 // BMR calculation
