@@ -12,7 +12,7 @@ const productSchema = new mongoose.Schema({
     enum: ["breakfast", "lunch", "dinner"],
     required: false
   },
-  subCategory: {
+  measurement: {
     type: String,
     required: false,
     trim: true
@@ -39,6 +39,9 @@ const productSchema = new mongoose.Schema({
     enum: ["nuts", "gluten", "dairy", "eggs", "other"],
     default: [],
   },
+  imgUrl : {
+    type : String
+  }
 }, { timestamps: true });
 
 export const Product = mongoose.model("Product", productSchema);
