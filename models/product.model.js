@@ -15,7 +15,8 @@ const productSchema = new mongoose.Schema({
   measurement: {
     type: String,
     required: false,
-    trim: true
+    trim: true,
+    enum : ["plate", "bowl", "piece", "pieces", "serving", "slice", "cup"]
   },
   quantity: {
     type: mongoose.Schema.Types.Mixed, 
@@ -39,7 +40,7 @@ const productSchema = new mongoose.Schema({
     enum: ["nuts", "gluten", "dairy", "eggs", "other"],
     default: [],
   },
-  imgUrl : {
+  imageUrl : {
     type : String
   }
 }, { timestamps: true });

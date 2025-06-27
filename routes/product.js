@@ -16,73 +16,100 @@ export const productRouter = express.Router();
 
 productRouter.post("/add", async (req, res) => {
   try {
-    const {
-      name,
-      type,
-      measurement,
-      quantity,
-      calories,
-      price,
-      dietaryPreference,
-      allergies,
-      imgUrl
-    } = req.body;
+    // === Single product add logic (commented out) ===
+// const {
+//   name,
+//   type,
+//   measurement,
+//   quantity,
+//   calories,
+//   price,
+//   dietaryPreference,
+//   allergies,
+//   imageUrl
+// } = req.body;
 
-    // Validate required fields
-    if (
-      !name || typeof name !== "string" || name.trim() === "" ||
-      !Array.isArray(type) || type.length === 0 ||
-      !Array.isArray(dietaryPreference) || dietaryPreference.length === 0 ||
-      quantity == null || isNaN(quantity) || Number(quantity) <= 0 ||
-      calories == null || isNaN(calories) || Number(calories) <= 0 ||
-      price == null || isNaN(price) || Number(price) < 0 ||
-      !Array.isArray(allergies)
-    ) {
-      return res.status(400).json({
-        message: "Missing or invalid required fields: name, type[], dietaryPreference[], quantity, calories, price, allergies[]."
+// ...validation and single-product creation here...
+
+
+    const products = req.body;
+
+    // Check if body is an array
+    if (!Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({ message: "Request body must be a non-empty array of product objects." });
+    }
+
+    const addedProducts = [];
+
+    for (const product of products) {
+      const {
+        name,
+        type,
+        measurement,
+        quantity,
+        calories,
+        price,
+        dietaryPreference,
+        allergies,
+        imageUrl
+      } = product;
+
+      // Validate required fields
+      if (
+        !name || typeof name !== "string" || name.trim() === "" ||
+        !Array.isArray(type) || type.length === 0 ||
+        !Array.isArray(dietaryPreference) || dietaryPreference.length === 0 ||
+        quantity == null || isNaN(quantity) || Number(quantity) <= 0 ||
+        calories == null || isNaN(calories) || Number(calories) <= 0 ||
+        price == null || isNaN(price) || Number(price) < 0 ||
+        !Array.isArray(allergies)
+      ) {
+        console.warn(`Skipping invalid product: ${name || "Unnamed"}`);
+        continue; // Skip invalid product
+      }
+
+      const normalizedType = type.map(t => t.trim().toLowerCase());
+      const normalizedDiet = dietaryPreference.map(d => d.trim().toLowerCase());
+      const normalizedAllergies = allergies.map(a => a.trim().toLowerCase());
+
+      const existingProduct = await Product.findOne({
+        name: name.trim(),
+        measurement: measurement?.trim() || null,
+        dietaryPreference: { $in: normalizedDiet }
       });
+
+      if (existingProduct) {
+        console.warn(`Product "${name}" already exists for one of the given dietary preferences. Skipping.`);
+        continue; // Skip duplicates
+      }
+
+      const newProduct = new Product({
+        name: name.trim(),
+        type: normalizedType,
+        measurement: measurement?.trim() || undefined,
+        quantity: Number(quantity),
+        calories: Number(calories),
+        price: Number(price),
+        dietaryPreference: normalizedDiet,
+        allergies: normalizedAllergies,
+        imageUrl
+      });
+
+      const savedProduct = await newProduct.save();
+      addedProducts.push(savedProduct);
     }
-
-    // Normalize arrays
-    const normalizedType = type.map(t => t.trim().toLowerCase());
-    const normalizedDiet = dietaryPreference.map(d => d.trim().toLowerCase());
-    const normalizedAllergies = allergies.map(a => a.trim().toLowerCase());
-
-    // Check for existing product with same name, measurement, and any matching dietary preference
-    const existingProduct = await Product.findOne({
-      name: name.trim(),
-      measurement: measurement?.trim() || null,
-      dietaryPreference: { $in: normalizedDiet }
-    });
-
-    if (existingProduct) {
-      return res.status(409).json({ message: "Product with this name and measurement already exists for one of the given dietary preferences." });
-    }
-
-    const newProduct = new Product({
-      name: name.trim(),
-      type: normalizedType,
-      measurement: measurement?.trim() || undefined,
-      quantity: Number(quantity),
-      calories: Number(calories),
-      price: Number(price),
-      dietaryPreference: normalizedDiet,
-      allergies: normalizedAllergies,
-      imgUrl : imgUrl
-    });
-
-    const savedProduct = await newProduct.save();
 
     res.status(201).json({
-      message: "Product added successfully.",
-      product: savedProduct
+      message: `${addedProducts.length} product(s) added successfully.`,
+      products: addedProducts
     });
 
   } catch (error) {
-    console.error("Error adding product:", error);
+    console.error("Error adding products:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 });
+
 
 
 // Route handler
