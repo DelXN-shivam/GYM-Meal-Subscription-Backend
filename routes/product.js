@@ -64,59 +64,16 @@ productRouter.post("/add", async (req, res) => {
   }
 });
 
-// Utility to find the best combination of products for a given calorie target
-function generateMealCombos(products, targetCalories) {
-  let bestCombo = [];
-  let bestDiff = Infinity;
-
-  const n = products.length;
-
-  // Limit brute-force combinations to small sets
-  for (let i = 0; i < 1 << n; i++) {
-    const combo = [];
-    let total = 0;
-
-    for (let j = 0; j < n; j++) {
-      if (i & (1 << j)) {
-        combo.push(products[j]);
-        total += products[j].calories;
-      }
-    }
-
-    const diff = Math.abs(targetCalories - total);
-    if (diff < bestDiff && combo.length > 0) {
-      bestDiff = diff;
-      bestCombo = combo;
-    }
-
-    // Stop early if exact match
-    if (bestDiff === 0) break;
-  }
-
-  return bestCombo;
-}
-
 // Route handler
 productRouter.get("/suggest", async (req, res) => {
   try {
-    const { dietaryPreference, allergies, calories , userId } = req.query;
+    const { dietaryPreference, allergies, userId } = req.query;
 
-    if (!dietaryPreference || !calories) {
+    if (!dietaryPreference) {
       return res.status(400).json({
-        message: "Both dietaryPreference and calories are required."
+        message: "Dietary preference is required."
       });
     }
-
-    const totalCalories = parseInt(calories);
-    if (isNaN(totalCalories) || totalCalories <= 0) {
-      return res.status(400).json({ message: "Calories must be a positive number." });
-    }
-
-    const calorieDistribution = {
-      breakfast: totalCalories * 0.3,
-      lunch: totalCalories * 0.4,
-      dinner: totalCalories * 0.3
-    };
 
     const dietPrefs = dietaryPreference
       .split(",")
@@ -136,12 +93,9 @@ productRouter.get("/suggest", async (req, res) => {
       : [];
 
     const requestedTypes = ["breakfast", "lunch", "dinner"];
-
     const suggestions = {};
 
     for (const type of requestedTypes) {
-      const targetCalories = calorieDistribution[type];
-
       const query = {
         type,
         dietaryPreference: { $in: dietPrefs }
@@ -155,23 +109,14 @@ productRouter.get("/suggest", async (req, res) => {
         .select("name type calories dietaryPreference allergies")
         .lean();
 
-      if (!products || products.length === 0) {
-        suggestions[type] = [];
-        continue;
-      }
-
-      // Pick best combination of products to match target calories
-      const bestCombo = generateMealCombos(products, targetCalories);
-      suggestions[type] = bestCombo;
+      suggestions[type] = products || [];
     }
 
-    await addProductsToUser(userId, suggestions);
+    if (userId) {
+      await addProductsToUser(userId, suggestions);
+    }
 
     res.status(200).json({
-      totalCalories,
-      calories : {
-        calorieDistribution
-      },
       suggestions,
       filtersApplied: {
         dietaryPreference: dietPrefs,
@@ -184,6 +129,7 @@ productRouter.get("/suggest", async (req, res) => {
     res.status(500).json({ message: "Server error." });
   }
 });
+
 
 async function addProductsToUser(userId, combo) {
   try {
