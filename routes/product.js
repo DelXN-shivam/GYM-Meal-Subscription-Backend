@@ -358,3 +358,32 @@ productRouter.patch("/update/:id", async (req, res) => {
     res.status(500).json({ message: "Internal server error." });
   }
 });
+
+
+productRouter.delete('/delete/:id', async (req, res) => {
+  try {
+    const { productId } = req.params;
+    if (!productId) {
+      return res.status(409).json({
+        message: "Plesase pass in valid Id"
+      })
+    }
+
+    const product = await Product.findByIdAndDelete(productId);
+    if(!product){
+      return res.status(409).json({
+        message : "Product not found"
+      })
+    }
+
+    return res.status(200).json({
+      message : "Product deleted successfully"
+    })
+  } catch(err){
+    console.error(err);
+    return res.status(500).json({
+      error : "Error while deleting product",
+      message : err.message 
+    })
+  }
+})
