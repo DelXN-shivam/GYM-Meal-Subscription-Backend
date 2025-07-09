@@ -107,7 +107,7 @@ userRouter.post("/calculate-calories", async (req, res) => {
 
 
 
-//BMI calculation 
+//BMI complete calculation
 function calculateBMI(weight, heightCm) {
   if (!weight || !heightCm) {
     throw new Error("Weight and height are required.");
