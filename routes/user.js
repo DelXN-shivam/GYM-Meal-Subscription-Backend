@@ -65,14 +65,20 @@ userRouter.post('/register' , validate , async (req , res) => {
 
 userRouter.post("/calculate-calories", async (req, res) => {
   const { gender, weight, height, age, activityLevel, goal, userId } = req.body;
-  console.log("inside calories")
+  console.log("inside calories");
+
   try {
-    // Validate request body
+    // === Validate required fields ===
     if (!gender || !weight || !height || !age || !activityLevel || !goal || !userId) {
       return res.status(400).json({ message: "All fields including userId are required" });
     }
 
-    // Perform calculations
+    const validGenders = ["male", "female"];
+    if (!validGenders.includes(gender.toLowerCase())) {
+      return res.status(400).json({ message: "Invalid gender value. Accepted values are: male, female, or other." });
+    }
+
+    // === Perform calculations ===
     const bmr = calculateBMR(gender, weight, height, age);
     const activityMultiplier = getActivityMultiplier(activityLevel);
     const tdee = bmr * activityMultiplier;
@@ -80,7 +86,7 @@ userRouter.post("/calculate-calories", async (req, res) => {
     const bmi = calculateBMI(weight, height);
     const macros = calculateMacros(adjustedCalories, goal.toLowerCase());
 
-    // Update the nested `nutrients` field
+    // === Update user nutrients ===
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
@@ -101,10 +107,10 @@ userRouter.post("/calculate-calories", async (req, res) => {
     });
 
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 });
-
 
 
 //BMI complete calculation
@@ -121,10 +127,20 @@ function calculateBMI(weight, heightCm) {
 
 // BMR calculation
 function calculateBMR(gender, weight, height, age) {
-  return gender === "male"
-    ? 10 * weight + 6.25 * height - 5 * age + 5
-    : 10 * weight + 6.25 * height - 5 * age - 161;
+  const base = 10 * weight + 6.25 * height - 5 * age;
+
+  switch (gender.toLowerCase()) {
+    case "male":
+      return base + 5;
+    case "female":
+      return base - 161;
+    // case "other":
+    //   return base - 78; // Average of male and female: (5 - 161) / 2 = -78
+    default:
+      throw new Error("Invalid gender value.");
+  }
 }
+
 
 function getActivityMultiplier(level) {
   const map = {

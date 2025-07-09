@@ -17,19 +17,19 @@ export const productRouter = express.Router();
 productRouter.post("/add", async (req, res) => {
   try {
     // === Single product add logic (commented out) ===
-// const {
-//   name,
-//   type,
-//   measurement,
-//   quantity,
-//   calories,
-//   price,
-//   dietaryPreference,
-//   allergies,
-//   imageUrl
-// } = req.body;
+    // const {
+    //   name,
+    //   type,
+    //   measurement,
+    //   quantity,
+    //   calories,
+    //   price,
+    //   dietaryPreference,
+    //   allergies,
+    //   imageUrl
+    // } = req.body;
 
-// ...validation and single-product creation here...
+    // ...validation and single-product creation here...
 
 
     const products = req.body;
@@ -225,49 +225,49 @@ async function addProductsToUser(userId, combo) {
 }
 
 
-productRouter.get("/all" , async  ( req , res ) => {
+productRouter.get("/all", async (req, res) => {
   try {
     const products = await Product.find()
-    if(!products){
-    return res.status(411).json({
-      message : "no products found"
+    if (!products) {
+      return res.status(411).json({
+        message: "no products found"
+      })
+    }
+    return res.status(200).json({
+      message: "Products found",
+      products: products
     })
   }
-    return res.status(200).json({
-      message : "Products found",
-      products : products
-    })
-}
-  catch(err){
-    console.error("Cannot get products" , err)
+  catch (err) {
+    console.error("Cannot get products", err)
     return res.status(500).json({
-      message  : 'Internal server error'
+      message: 'Internal server error'
     })
   }
 })
 
-productRouter.get("/get/:id" , async ( req , res ) => {
+productRouter.get("/get/:id", async (req, res) => {
   try {
     const productId = req.params.id;
 
     const existingProduct = await Product.findById(productId);
 
-    if(!existingProduct){
+    if (!existingProduct) {
       return res.status(401).json({
-        message : "Product does not exist"
+        message: "Product does not exist"
       })
     }
 
     return res.status(200).json({
-      message : "Product found",
-      product : existingProduct
+      message: "Product found",
+      product: existingProduct
     })
 
-  } catch(err){
+  } catch (err) {
     console.error(err)
     return res.status(500).json({
-      message : "Error fetching product",
-      error : err.message
+      message: "Error fetching product",
+      error: err.message
     })
   }
 })
@@ -289,3 +289,72 @@ productRouter.post('/getProducts', async (req, res) => {
   }
 });
 
+
+
+productRouter.patch("/update/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    // === ID Validation ===
+    if (!id || id.length !== 24) {
+      return res.status(400).json({ message: "Invalid product ID." });
+    }
+
+    // === Body Null Check ===
+    if (!updates || typeof updates !== 'object') {
+      return res.status(400).json({ message: "No update data provided." });
+    }
+
+    const allowedFields = [
+      "name",
+      "type",
+      "measurement",
+      "quantity",
+      "calories",
+      "price",
+      "dietaryPreference",
+      "allergies",
+      "imageUrl"
+    ];
+
+    const validatedUpdates = {};
+
+    for (const key of allowedFields) {
+      if (updates[key] != null) { // null or undefined check
+        if (Array.isArray(updates[key])) {
+          validatedUpdates[key] = updates[key].map((val) =>
+            typeof val === "string" ? val.trim().toLowerCase() : val
+          );
+        } else if (typeof updates[key] === "string") {
+          validatedUpdates[key] = updates[key].trim();
+        } else {
+          validatedUpdates[key] = updates[key];
+        }
+      }
+    }
+
+    if (Object.keys(validatedUpdates).length === 0) {
+      return res.status(400).json({ message: "No valid fields provided for update." });
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      { $set: validatedUpdates },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Product not found." });
+    }
+
+    res.status(200).json({
+      message: "Product updated successfully.",
+      product: updatedProduct
+    });
+
+  } catch (error) {
+    console.error("Error updating product:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
