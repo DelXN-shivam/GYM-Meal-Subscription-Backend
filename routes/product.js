@@ -362,7 +362,7 @@ productRouter.patch("/update/:id", async (req, res) => {
 
 productRouter.delete('/delete/:id', async (req, res) => {
   try {
-    const { productId } = req.params.id;
+    const productId  = req.params.id;
     if (!productId) {
       return res.status(409).json({
         message: "Plesase pass in valid Id"
