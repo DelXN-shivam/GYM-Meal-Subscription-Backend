@@ -115,7 +115,7 @@ productRouter.post("/add", async (req, res) => {
 // Route handler
 productRouter.get("/suggest", async (req, res) => {
   try {
-    const { dietaryPreference, allergies, userId } = req.query;
+    const { dietaryPreference, allergies, calories, userId } = req.query;
 
     if (!dietaryPreference) {
       return res.status(400).json({
@@ -153,6 +153,15 @@ productRouter.get("/suggest", async (req, res) => {
     const requestedTypes = ["breakfast", "lunch", "dinner"];
     const suggestions = {};
 
+    const totalCalories = parseInt(calories);
+    const calorieSplit = {
+      breakfast: Math.round(totalCalories / 3),
+      lunch: Math.round(totalCalories / 3),
+      dinner: totalCalories - 2 * Math.round(totalCalories / 3)
+    };
+    console.log(Math.round(totalCalories / 3),
+      Math.round(totalCalories / 3),
+      totalCalories - 2 * Math.round(totalCalories / 3))
     for (const type of requestedTypes) {
       const query = {
         type,
@@ -163,13 +172,22 @@ productRouter.get("/suggest", async (req, res) => {
         query.allergies = { $nin: allergyList };
       }
 
+
       const products = await Product.find(query)
         .select("name type calories dietaryPreference allergies")
         .lean();
 
-      suggestions[type] = products || [];
+      const targetCalories = calorieSplit[type];
+      const selected = selectProductsForCalories(products, targetCalories);
+      suggestions[type] = selected;
     }
 
+    const selectedCalories = {};
+
+    for (const type of requestedTypes) {
+      const total = suggestions[type].reduce((sum, item) => sum + item.calories, 0);
+      selectedCalories[type] = total;
+    }
     if (userId) {
       await addProductsToUser(userId, suggestions);
     }
@@ -178,7 +196,8 @@ productRouter.get("/suggest", async (req, res) => {
       suggestions,
       filtersApplied: {
         dietaryPreference: dietPrefs,
-        excludedAllergies: allergyList
+        excludedAllergies: allergyList,
+        caloriesPerMeal: selectedCalories
       }
     });
 
@@ -188,6 +207,23 @@ productRouter.get("/suggest", async (req, res) => {
   }
 });
 
+function selectProductsForCalories(products, targetCalories) {
+  // Sort high calorie first for greedy
+  const sorted = [...products].sort((a, b) => b.calories - a.calories);
+  const selected = [];
+  let total = 0;
+
+  for (const product of sorted) {
+    if (total + product.calories <= targetCalories * 1.01) { // allow 10% margin
+      selected.push(product);
+      total += product.calories;
+
+      if (total >= targetCalories * 0.9) break; // stop when within 90% of target
+    }
+  }
+
+  return selected;
+}
 
 
 async function addProductsToUser(userId, combo) {
@@ -289,6 +325,50 @@ productRouter.post('/getProducts', async (req, res) => {
   }
 });
 
+productRouter.get('/filterProducts', async (req, res) => {
+  try {
+    const { type } = req.query;
+
+    if (!type) {
+      return res.status(409).json({
+        message: "Please provide type"
+      })
+    }
+
+    const validTypes = ['breakfast', 'lunch', 'dinner']
+    const typeArray = Array.isArray(type)
+      ? type
+      : type.split(",").map((t) => t.trim().toLowerCase());
+
+    const invalidTypes = typeArray.filter((t) => !validTypes.includes(t));
+    if (invalidTypes.length > 0) {
+      return res.status(409).json({
+        message: "Please pass in valid type",
+        error: `Invalid types : ${invalidTypes.join(",")} . Allowed Types are ${validTypes.join(",")}`
+      })
+    }
+
+    const filteredProducts = await Product.find({type});
+
+    if (filteredProducts.length == 0) {
+      return res.status(409).json({
+        message: "No filtered products found"
+      })
+    }
+
+    return res.status(200).json({
+      message: "Products found",
+      filteredProducts,
+      count : filteredProducts.length
+    })
+
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error while fetching filtered products",
+      error: err.message
+    })
+  }
+})
 
 
 productRouter.patch("/update/:id", async (req, res) => {
@@ -362,7 +442,7 @@ productRouter.patch("/update/:id", async (req, res) => {
 
 productRouter.delete('/delete/:id', async (req, res) => {
   try {
-    const productId  = req.params.id;
+    const productId = req.params.id;
     if (!productId) {
       return res.status(409).json({
         message: "Plesase pass in valid Id"
@@ -370,20 +450,20 @@ productRouter.delete('/delete/:id', async (req, res) => {
     }
 
     const product = await Product.findByIdAndDelete(productId);
-    if(!product){
+    if (!product) {
       return res.status(409).json({
-        message : "Product not found"
+        message: "Product not found"
       })
     }
 
     return res.status(200).json({
-      message : "Product deleted successfully"
+      message: "Product deleted successfully"
     })
-  } catch(err){
+  } catch (err) {
     console.error(err);
     return res.status(500).json({
-      error : "Error while deleting product",
-      message : err.message 
+      error: "Error while deleting product",
+      message: err.message
     })
   }
 })
