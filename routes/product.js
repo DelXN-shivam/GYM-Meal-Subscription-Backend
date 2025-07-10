@@ -117,111 +117,85 @@ productRouter.get("/suggest", async (req, res) => {
   try {
     const { dietaryPreference, allergies, calories, userId } = req.query;
 
+    // 1️⃣ validate dietaryPreference
     if (!dietaryPreference) {
-      return res.status(400).json({
-        message: "Dietary preference is required."
-      });
+      return res.status(400).json({ message: "Dietary preference is required." });
     }
-
-    const dietPrefs = dietaryPreference
-      .split(",")
-      .map(d => d.trim().toLowerCase());
-
+    const dietPrefs = dietaryPreference.split(",").map(d => d.trim().toLowerCase());
     const validPrefs = ["veg", "non-veg", "vegan"];
     const invalidPrefs = dietPrefs.filter(d => !validPrefs.includes(d));
-
-    if (invalidPrefs.length > 0) {
-      return res.status(400).json({
-        message: `Invalid dietary preference(s): ${invalidPrefs.join(", ")}`
-      });
+    if (invalidPrefs.length) {
+      return res.status(400).json({ message: `Invalid dietary preference(s): ${invalidPrefs.join(", ")}` });
     }
 
-    // Validate allergies
+    // 2️⃣ validate allergies
     const allowedAllergies = ["nuts", "gluten", "dairy", "eggs"];
-    const allergyList = allergies
-      ? allergies.split(",").map(a => a.trim().toLowerCase())
-      : [];
-
+    const allergyList = allergies ? allergies.split(",").map(a => a.trim().toLowerCase()) : [];
     const invalidAllergies = allergyList.filter(a => !allowedAllergies.includes(a));
-
-    if (invalidAllergies.length > 0) {
+    if (invalidAllergies.length) {
       return res.status(400).json({
         message: `Invalid allergy value(s): ${invalidAllergies.join(", ")}. Allowed values: ${allowedAllergies.join(", ")}.`
       });
     }
 
-    const requestedTypes = ["breakfast", "lunch", "dinner"];
-    const suggestions = {};
-
+    // 3️⃣ calorie split per meal
     const totalCalories = parseInt(calories);
     const calorieSplit = {
       breakfast: Math.round(totalCalories / 3),
-      lunch: Math.round(totalCalories / 3),
-      dinner: totalCalories - 2 * Math.round(totalCalories / 3)
+      lunch:     Math.round(totalCalories / 3),
+      dinner:    totalCalories - 2 * Math.round(totalCalories / 3)
     };
-    console.log(Math.round(totalCalories / 3),
-      Math.round(totalCalories / 3),
-      totalCalories - 2 * Math.round(totalCalories / 3))
+
+    const requestedTypes = ["breakfast", "lunch", "dinner"];
+    const suggestions = {};
+
+    // 4️⃣ fetch products (now with the *entire* product body)
     for (const type of requestedTypes) {
-      const query = {
-        type,
-        dietaryPreference: { $in: dietPrefs }
-      };
+      const query = { type, dietaryPreference: { $in: dietPrefs } };
+      if (allergyList.length) query.allergies = { $nin: allergyList };
 
-      if (allergyList.length > 0) {
-        query.allergies = { $nin: allergyList };
-      }
-
-
-      const products = await Product.find(query)
-        .select("name type calories dietaryPreference allergies")
-        .lean();
-
+      const products = await Product.find(query).lean(); // ← full documents
       const targetCalories = calorieSplit[type];
-      const selected = selectProductsForCalories(products, targetCalories);
-      suggestions[type] = selected;
+      suggestions[type] = selectProductsForCalories(products, targetCalories);
     }
 
+    // 5️⃣ summarise calories selected
     const selectedCalories = {};
-
     for (const type of requestedTypes) {
-      const total = suggestions[type].reduce((sum, item) => sum + item.calories, 0);
-      selectedCalories[type] = total;
-    }
-    if (userId) {
-      await addProductsToUser(userId, suggestions);
+      selectedCalories[type] = suggestions[type].reduce((sum, p) => sum + p.calories, 0);
     }
 
+    // 6️⃣ optionally attach suggestions to user
+    if (userId) await addProductsToUser(userId, suggestions);
+
+    // 7️⃣ response
     res.status(200).json({
-      suggestions,
+      suggestions,                           // full product objects here ✅
       filtersApplied: {
         dietaryPreference: dietPrefs,
         excludedAllergies: allergyList,
         caloriesPerMeal: selectedCalories
       }
     });
-
-  } catch (error) {
-    console.error("Error suggesting meals:", error);
+  } catch (err) {
+    console.error("Error suggesting meals:", err);
     res.status(500).json({ message: "Server error." });
   }
 });
 
+// helper
 function selectProductsForCalories(products, targetCalories) {
-  // Sort high calorie first for greedy
   const sorted = [...products].sort((a, b) => b.calories - a.calories);
   const selected = [];
   let total = 0;
 
   for (const product of sorted) {
-    if (total + product.calories <= targetCalories * 1.01) { // allow 10% margin
+    if (total + product.calories <= targetCalories * 1.1) { // allow 10 % wiggle room
       selected.push(product);
       total += product.calories;
-
-      if (total >= targetCalories * 0.9) break; // stop when within 90% of target
+      if (total >= targetCalories * 0.9) break;              // stop at ≥ 90 % target
     }
   }
-
   return selected;
 }
 
@@ -308,6 +282,7 @@ productRouter.get("/get/:id", async (req, res) => {
   }
 })
 
+//check call
 productRouter.post('/getProducts', async (req, res) => {
   try {
     const { productIds } = req.body;
