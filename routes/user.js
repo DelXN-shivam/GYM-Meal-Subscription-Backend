@@ -1,6 +1,6 @@
 import express from 'express'
 import bcrypt from 'bcrypt'
-import {User} from '../models/user.model.js'
+import { User } from '../models/user.model.js'
 import { validate } from '../middleware/validateUserInput.js'
 export const userRouter = express.Router()
 
@@ -13,23 +13,23 @@ export const userRouter = express.Router()
 
   2. /api/v1/user/calculate-calories  ---->  calculate calories of the user
 */
-userRouter.post('/register' , validate , async (req , res) => {
-   
-    //required inputs given below
-    try {
-        const {name,email, password, contactNo} = req.body
+userRouter.post('/register', validate, async (req, res) => {
+
+  //required inputs given below
+  try {
+    const { name, email, password, contactNo } = req.body
 
     const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password ,salt)
-    
+    const hashedPassword = await bcrypt.hash(password, salt)
+
     //find existing user
     const existingUser = await User.findOne({
-      email : email
+      email: email
     })
 
-    if(existingUser) {
+    if (existingUser) {
       return res.status(500).json({
-        message : "User already exists"
+        message: "User already exists"
       })
     }
 
@@ -41,26 +41,26 @@ userRouter.post('/register' , validate , async (req , res) => {
       contactNo
     });
 
-   const finalUser =  await newUser.save()
+    const finalUser = await newUser.save()
 
     res.status(200).json({
-        message : "User registered successfully" , 
-        User : finalUser,
-        name : name,
-        email : email,
-        originalPassword : password,
-        contactNo : contactNo,
+      message: "User registered successfully",
+      User: finalUser,
+      name: name,
+      email: email,
+      originalPassword: password,
+      contactNo: contactNo,
     })
-    }
+  }
 
-    catch(err){
-        console.log(err)
-        res.status(500).json({
-            message : "User registration failed",
-            error : err.message
-        })
-        
-    }
+  catch (err) {
+    console.log(err)
+    res.status(500).json({
+      message: "User registration failed",
+      error: err.message
+    })
+
+  }
 })
 
 userRouter.post("/calculate-calories", async (req, res) => {
@@ -122,7 +122,7 @@ function calculateBMI(weight, heightCm) {
   const heightInMeters = heightCm / 100;
   const bmi = weight / (heightInMeters ** 2);
 
-  return parseFloat(bmi.toFixed(2)); 
+  return parseFloat(bmi.toFixed(2));
 }
 
 // BMR calculation
@@ -184,7 +184,7 @@ function calculateMacros(calories, goal) {
   }
 
   return {
-    protein:  proteinPct * 100,
+    protein: proteinPct * 100,
     carbs: carbsPct * 100,
     fats: fatsPct * 100
   };
@@ -272,28 +272,45 @@ userRouter.get("/all", async (req, res) => {
   }
 });
 
-userRouter.get("/get/:id" , async ( req , res ) => {
+userRouter.get("/get/:id", async (req, res) => {
   try {
     const userId = req.params.id;
     const existingUser = await User.findById(userId);
 
-    if(!existingUser){
+    if (!existingUser) {
       return res.status(401).json({
-        message : "User does not exist"
+        message: "User does not exist"
       })
     }
 
     return res.status(200).json({
-      message : 'User Found',
-      user : existingUser
+      message: 'User Found',
+      user: existingUser
     })
 
   }
-  catch (err){
+  catch (err) {
     console.error(err);
     return res.status(500).json({
-      message : "Error fetching User",
-      error : err.message
+      message: "Error fetching User",
+      error: err.message
     })
   }
 })
+
+
+userRouter.get("/count", async (req, res) => {
+  try {
+    const count = await User.countDocuments();
+
+    return res.status(200).json({
+      message: "User count fetched successfully",
+      count
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error fetching user count",
+      error: err.message
+    });
+  }
+});

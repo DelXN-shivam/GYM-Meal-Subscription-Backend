@@ -467,3 +467,20 @@ productRouter.delete('/delete/:id', async (req, res) => {
     })
   }
 })
+
+
+productRouter.get("/count", async (req, res) => {
+  try {
+    const count = await Product.countDocuments();
+
+    return res.status(200).json({
+      message: "Product count fetched successfully",
+      count
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error fetching Product count",
+      error: err.message
+    });
+  }
+});
