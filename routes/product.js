@@ -348,7 +348,7 @@ productRouter.get('/filterProducts', async (req, res) => {
       })
     }
 
-    const filteredProducts = await Product.find({type});
+    const filteredProducts = await Product.find({ type: { $in: typeArray } });
 
     if (filteredProducts.length == 0) {
       return res.status(409).json({
